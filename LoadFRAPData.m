@@ -1,4 +1,4 @@
-function frap = LoadFRAPData(folder, subfolder)
+function [frap,cache_file] = LoadFRAPData(folder, subfolder)
 % LoadFRAPData Load photobleaching data from file  
 %    Expects data to be organised as described in README.txt
 %    Caches data for faster subsequent load
@@ -31,7 +31,7 @@ function frap = LoadFRAPData(folder, subfolder)
             frap = load(cache_file);
             frap.folder = folder;
             frap.subfolder = subfolder;
-            return
+            return;
         else
             FeedbackMessage('GarvanFrap','   Found old cache file; ignoring.');
         end  
@@ -81,7 +81,6 @@ function frap = LoadFRAPData(folder, subfolder)
     frap.v = v;
  
     save(cache_file,'-struct','frap');
-    
     
     function [images, px_per_um] = LoadImagesFromFolder(search)
     % Load a series of numbered images from a folder
