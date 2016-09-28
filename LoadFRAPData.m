@@ -92,6 +92,7 @@ function frap = LoadFRAPData(folder, subfolder)
                
         if isempty(sel_folder)
             images = {};
+            px_per_um = 1;
             return 
         end
         

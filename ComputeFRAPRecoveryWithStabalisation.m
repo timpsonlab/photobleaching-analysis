@@ -45,20 +45,31 @@ function ComputeFRAPRecoveryWithStabalisation(folder, subfolder)
     F = {};
     for j=1:length(frap.after)
         im = frap.after{j};
-        imagesc(im)
-        hold on;
-        plot(roi_x+px(j),roi_y+py(j),'r-');
-        plot(roi_x+px(1),roi_y+py(1),'g-');
+        out_im = GetGreenMappedImage(im);
+
+        p = [[roi_x roi_x(1)]' + px(1) [roi_y roi_y(1)]' + py(1)]';
+        out_im = insertShape(out_im, 'Polygon', p(:)', 'Color', 'blue', 'LineWidth', 1);
+
+        p = [[roi_x roi_x(1)]'+ px(j) [roi_y roi_y(1)]' + py(j)]';
+        out_im = insertShape(out_im, 'Polygon', p(:)', 'Color', 'red', 'LineWidth', 1);
         
+        out_im(out_im > 1) = 1;
+        out_im(out_im < 0) = 0;
+        out_im(~isfinite(out_im)) = 0;
+
+        out_im = permute(out_im,[2 1 3]);
+        %out_im = AddScaleBar(out_im, 1/px_per_um, 5, 10);
+
+        F{j} = out_im;
+
         mask2 = inpolygon(X,Y,roi_x+px(j),roi_y+py(j));
 
         recovery_static(j) = sum(im(mask1));
         recovery_tracked(j) = sum(im(mask2));
         
-        hold off;
+        image(out_im);
         daspect([1 1 1])
-        caxis([0 255])
-        F{j} = getframe(gcf);
+        drawnow;
     end
     
     SaveVideo([folder '..' filesep subfolder '.avi'], F);

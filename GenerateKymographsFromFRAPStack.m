@@ -16,7 +16,7 @@ function results = GenerateKymographsFromFRAPStack(root, always_request_new_poin
 
 
 if nargin < 1
-    root = uigetdir(root);
+    root = uigetdir();
     root = [root filesep];
 end
 
@@ -50,7 +50,7 @@ for i=1:length(subfolders)
     points = LoadJunctionPoints(folder, subfolders{i});
     
     
-    [l1,l2,R1,R2,F,~,total] = ProcessMovingFRAPLineScan(frap, points.x, points.y);
+    results{i} = ProcessMovingFRAPLineScan(frap, points.x, points.y);
               
     results{i} = struct('l1',l1,'l2',l2,'R1',R1,'R2',R2,'total',total,'folder',folder,'subfolder',subfolders{i});
     

@@ -11,7 +11,7 @@ for m=1:length(folders)
     results{m} = cell(length(folders{m}));
     for j=1:length(folders{m})
         frap = LoadFRAPData(folders{m}{j}, subfolders{m}{j});
-        points = LoadPoints(folders{m}{j}, subfolders{m}{j});
+        points = LoadJunctionPoints(folders{m}{j}, subfolders{m}{j});
         R = LoadLineProfile (folders{m}{j}, subfolders{m}{j});
                 
         result = ComputeFLIPCurvesAtOffsetsFromBleach(frap, points.x, points.y, R, offsets_um);

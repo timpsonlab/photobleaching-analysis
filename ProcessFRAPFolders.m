@@ -5,11 +5,15 @@ function ProcessFRAPFolders(root)
     end
 
     folders = GetFoldersFromFolder(root);
-%{
+
     for i=1:length(folders)   
-        ProcessFRAP([root filesep folders{i}])
+        [folder, subfolders] = GetFRAPSubFolders([root folders{i}]);
+        
+        for j=1:length(subfolders)
+            ComputeFRAPRecoveryWithStabalisation(folder,subfolders{j});
+        end
     end
-%}
+    
     AssembleCurves(root, folders);
     
 end

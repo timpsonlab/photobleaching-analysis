@@ -1,5 +1,11 @@
 function Interface(id, title, buttons)
 
+    if ispc;
+        javax.swing.UIManager.setLookAndFeel('com.sun.java.swing.plaf.windows.WindowsLookAndFeel');
+    else ismac;
+        javax.swing.UIManager.setLookAndFeel('com.apple.laf.AquaLookAndFeel');
+    end
+
     global feedback__
 
     if isempty(feedback__)
@@ -36,7 +42,6 @@ function Interface(id, title, buttons)
     set(fh,'Position',pos);
 
     
-    FeedbackMessage(id, 'Hello')
     FeedbackMessage(id, 'Please select an option')
     
     function AddButton(name, callback)

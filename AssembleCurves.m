@@ -35,8 +35,8 @@ function AssembleCurves(root, folders)
         end
 
         file = [root folders{i} '.xls'];
-        writetable(t1,file,'Sheet','Tracked');
-        writetable(t2,file,'Sheet','Untracked');
+        writetable(t1,file,'Sheet','Untracked');
+        writetable(t2,file,'Sheet','Tracked');
         DeleteDefaultExcelSheets(file);
         
     end

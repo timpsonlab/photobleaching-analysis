@@ -1,0 +1,62 @@
+mcc -C -o FrapAnalysis -W WinMain:FrapAnalysis -T link:exe -d C:\Users\CIMLab\Documents\photobleaching-analysis\FrapAnalysis\for_testing -v C:\Users\CIMLab\Documents\photobleaching-analysis\FRAPInterface.m 
+Compiler version: 6.1 (R2015b)
+
+Dependency analysis by REQUIREMENTS.
+
+[Warning: Adding path "C:\Users\CIMLab\Documents\photobleaching-analysis" to
+Compiler path instance.] 
+[] 
+Parsing file "C:\Users\CIMLab\Documents\photobleaching-analysis\FRAPInterface.m"
+	(Referenced from: "Compiler Command Line").
+Deleting 42 temporary MEX authorization files.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120817769_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120822511_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120821356_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012087991_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120815040_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120832348_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120830735_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120826575_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120817077_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120812673_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120811481_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120820747_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120812934_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012081817_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012089137_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120820835_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012081676_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012084672_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120831690_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120811946_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120818246_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120810927_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120830187_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120831807_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012086102_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120817738_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120822643_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120814298_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120819627_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120815385_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120820316_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120828508_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120818096_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012083241_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120816656_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012084694_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012083779_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120821935_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_012086518_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120831263_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120825982_4616.auth'.
+Removing: 'C:\Users\CIMLab\AppData\Local\Temp\mathworks_tmp_0120831947_4616.auth'.
+Generating file "C:\Users\CIMLab\Documents\photobleaching-analysis\FrapAnalysis\for_testing\readme.txt".
+Packaging...
+Adding custom icon C:\Program Files\MATLAB\R2015b\toolbox\compiler\Resources\default_icon.ico to C:\Users\CIMLab\Documents\photobleaching-analysis\FrapAnalysis\for_testing\FrapAnalysis.exe.
+Attempting to embed the CTF archive into the application C:\Users\CIMLab\Documents\photobleaching-analysis\FrapAnalysis\for_testing\FrapAnalysis.exe.
+Finished embedding CTF archive. Deleting the external CTF archive.
+Creating the bundle...
+Web based installer created at C:\Users\CIMLab\Documents\photobleaching-analysis\FrapAnalysis\for_redistribution\FrapAnalysis_web.exe.
+Packaging complete.
+Elapsed packaging time was: 58 seconds.

@@ -1,5 +1,5 @@
 function R = LoadLineProfiles(root,excl)
-
+% depreciated
     if ~iscell(root)
         root = {root};
     end
