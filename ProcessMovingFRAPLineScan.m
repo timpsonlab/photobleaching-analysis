@@ -13,7 +13,7 @@ function results = ProcessMovingFRAPLineScan(frap, initial_x, initial_y, lines)
     
     tracked_points_file = [frap.folder frap.subfolder filesep 'tracked points.mat'];
     
-    if ~exist(tracked_points_file,'file')
+    if ~exist(tracked_points_file,'file') || true
         for i=1:n
             [line_x{i},line_y{i}] = TrackJunction(frap.flow,initial_x{i},initial_y{i});
         end
@@ -103,7 +103,7 @@ function results = ProcessMovingFRAPLineScan(frap, initial_x, initial_y, lines)
             
             
             I2 = sub2ind(size(im),round(YW),round(XW));
-            mask = false(size(ims));
+            mask = false(size(im));
             mask(I2) = true;
             
             se = strel('disk',2);
@@ -150,13 +150,13 @@ function results = ProcessMovingFRAPLineScan(frap, initial_x, initial_y, lines)
         idx = idx + 1;
     end
     
-    results = struct('l1',l1,...
-                     'l2',l2,...
-                     'R1',R1,...
-                     'R2',R2,...
-                     'F',F,...
-                     'NF',NF,...
-                     'total',total,...
-                     'px_per_um',frap.px_per_um);
+    results.l1 = l1;
+    results.l2 = l2;
+    results.R1 = R1;
+    results.R2 = R2;
+    results.F = F;
+    results.NF = NF;
+    results.total = total;
+    results.px_per_um = frap.px_per_um;
                      
 end

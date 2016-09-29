@@ -15,8 +15,7 @@ function flow = ComputeOpticalFlow(ims, image_smoothing_kernel_width, flow_smoot
         flow_smoothing_kernel_width = 8;
     end
 
-    optical = vision.OpticalFlow( ...
-        'OutputValue', 'Horizontal and vertical components in complex form');
+    optical = OpticalFlowLK();
 
     % Apply smoothing to images
     if image_smoothing_kernel_width > 0
@@ -36,3 +35,6 @@ function flow = ComputeOpticalFlow(ims, image_smoothing_kernel_width, flow_smoot
             flow(:,:,i) = conv2(flow(:,:,i), kern, 'same');    
         end
     end
+    
+    flow = single(flow);
+    

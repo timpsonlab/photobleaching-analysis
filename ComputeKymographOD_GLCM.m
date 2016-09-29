@@ -22,7 +22,7 @@ function contrast = ComputeKymographOD_GLCM(r, im, lim, max_distance, n_points)
     r = r(1:step:dist);
     rout = linspace(0,max_distance,n_points);
         
-    
+    im(~isfinite(im)) = 0;
     glcm = graycomatrix(im, 'Offset', [(1:step:dist)' zeros(length(r),1)], 'GrayLimits', [0 lim]);
     props = graycoprops(glcm, 'Contrast');
 
