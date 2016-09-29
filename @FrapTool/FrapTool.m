@@ -14,8 +14,10 @@ classdef FrapTool < handle
         junction_h;
         junction_type;
         
-        tracked_junctions_x;
-        tracked_junctions_y;
+        rois;
+        tracked_roi_centre;
+        
+        tracked_junctions;
         
         draw_mode = 'new junction';
     end
@@ -49,7 +51,8 @@ classdef FrapTool < handle
             file_menu = uimenu(obj.fh,'Label','File');
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
             uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
-            uimenu(file_menu,'Label','Export Kymographs','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
+            uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
+            uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
             uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) obj.TrackJunctions,'Accelerator','T');
@@ -115,6 +118,16 @@ classdef FrapTool < handle
             
             obj.handles.draw_image.ButtonDownFcn = @(~,~) obj.MouseDown;
             obj.handles.draw_image.HitTest = 'on';
+            
+            rec_h = obj.handles.recovery_ax;
+            cla(rec_h);
+            recovery = obj.GetRecovery();
+            plot(rec_h,recovery);
+            hold(rec_h,'on');
+
+            recovery = obj.GetRecovery('stable');
+            plot(rec_h,recovery);
+            
         end
         
         function UpdateDisplay(obj)
@@ -134,17 +147,31 @@ classdef FrapTool < handle
                     0 1 0
                     0 0 1];
                         
-            for i=1:length(obj.tracked_junctions_x)            
-                [~,~,idx] = GetThickLine(size(cur_image),obj.tracked_junctions_x{i}(cur,:),obj.tracked_junctions_y{i}(cur,:),600,ndil); 
+            for i=1:length(obj.tracked_junctions)            
+                [~,idx] = GetThickLine(size(cur_image),obj.tracked_junctions{i}(cur,:),600,ndil); 
                 mask_im(idx) = obj.junction_type(i);
             end
             
-            %caxis(obj.handles.image_ax,[0 max(cur_image(:))]);
             obj.handles.image.CData = out_im;
             
             obj.handles.mask_image.CData = ind2rgb(mask_im+1,cmap);
             obj.handles.mask_image.AlphaData = 0.8*(mask_im>0);
-            
+                        
+        end
+        
+        function recovery = GetRecovery(obj,opt)
+            d = obj.current_data;
+
+            roi = d.roi_x + 1i * d.roi_y;
+            if nargin > 1 && strcmp(opt,'stable')
+                % Get centre of roi and stabalise using optical flow
+                p = mean(roi);
+                roi = roi - p;
+                p = TrackJunction(obj.current_data.flow,p);
+                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi, p); 
+            else
+                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi);
+            end
         end
         
         function StartNewJunction(obj, junction_type)
@@ -163,8 +190,8 @@ classdef FrapTool < handle
 
         function MouseDown(obj)
             
-            [x0,y0] = obj.GetCurrentPoint();            
-  
+            p0 = obj.GetCurrentPoint();    
+            
             switch obj.draw_mode
                 case 'new_junction'
 
@@ -172,19 +199,18 @@ classdef FrapTool < handle
                         return
                     end
 
-                    obj.junctions{end}(end+1,:) = [x0,y0];
+                    obj.junctions{end}(end+1) = p0;
 
                     p = obj.junctions{end};
-                    set(obj.junction_h(end),'XData',p(:,1),'YData',p(:,2));
+                    set(obj.junction_h(end),'XData',real(p),'YData',imag(p));
                     
                 case 'delete'
                     
                     % Find closest junction
-                    p = [x0 y0];
                     min_dist = inf;
                     min_jcn = 1;
                     for i=1:length(obj.junctions)
-                        dist = sqrt(sum((obj.junctions{i} - p).^2,1));
+                        dist = abs(obj.junctions{i} - p0);
                         if min(dist) < min_dist
                             min_dist = min(dist);
                             min_jcn = i;
@@ -200,17 +226,16 @@ classdef FrapTool < handle
             end
         end
 
-        function [x,y] = GetCurrentPoint(obj)
+        function p = GetCurrentPoint(obj)
             pt = get(obj.handles.draw_ax, 'CurrentPoint');
-            x = pt(1,1);
-            y = pt(1,2); 
+            p = pt(1,1) + 1i * pt(1,2);
         end        
         
         function UndoPoint(obj)
             if ~isempty(obj.junctions)
                 obj.junctions{end}(end,:) = [];
                 p = obj.junctions{end};
-                set(obj.junction_h(end),'XData',p(:,1),'YData',p(:,2));
+                set(obj.junction_h(end),'XData',real(p),'YData',imag(p));
             end
         end
         
@@ -224,18 +249,14 @@ classdef FrapTool < handle
             
             wh = waitbar(0, 'Tracking Junctions...');
             for i=1:length(obj.junctions)
-                x = obj.junctions{i}(:,1);
-                y = obj.junctions{i}(:,2);
-               
+                p = obj.junctions{i};
                 
-                [xt, yt] = TrackJunction(obj.current_data.flow, x, y, true, np);
+                t = TrackJunction(obj.current_data.flow, p, true, np);
                 
                 nb = length(obj.current_data.before);
-                xt = [repmat(xt(1,:),[nb 1]); xt]; %#ok
-                yt = [repmat(yt(1,:),[nb 1]); yt]; %#ok
+                t = [repmat(t(1,:),[nb 1]); t];
                 
-                obj.tracked_junctions_x{i} = xt;
-                obj.tracked_junctions_y{i} = yt;
+                obj.tracked_junctions{i} = t;
                 waitbar(i/length(obj.junctions));
             end
             close(wh);
@@ -266,7 +287,7 @@ classdef FrapTool < handle
         
         function ExportKymographs(obj)
            
-            if isempty(obj.tracked_junctions_x)
+            if isempty(obj.tracked_junctions)
                 msgbox('No tracked junctions found to export as kymographs. Please select and track junctions to export as kymographs.',...
                        'Error','warn');
             end
@@ -276,7 +297,7 @@ classdef FrapTool < handle
                 return;
             end
             
-            for i=1:length(tracked_junctions)
+            for i=1:length(obj.tracked_junctions)
                 [kymograph,r] = obj.GenerateKymograph(i);
                 filename = [obj.current_data.name '_junction_' num2str(i) '_' obj.junction_types{obj.junction_type(i)} '.tif'];
                 imwrite(kymograph,[export_folder filesep filename]);
@@ -286,12 +307,11 @@ classdef FrapTool < handle
         
         function [kymograph,r] = GenerateKymograph(obj, junction)
             
-            x = obj.tracked_junctions_x{junction};
-            y = obj.tracked_junctions_y{junction};
+            p = obj.tracked_junctions{junction};
             
             images = [obj.current_data.before, obj.current_data.after];
             
-            results = ExtractTrackedJunctions(images, {x}, {y});
+            results = ExtractTrackedJunctions(images, {p});
             [kymograph,r] = GetCorrectedKymograph(results);
 
         end

@@ -31,7 +31,11 @@ function SetupLayout(obj)
     h.image_scroll = uicontrol('Style','slider','Min',1,'Max',100,...
                                'Value',1,'SliderStep',[1 1],'Parent',display_layout,...
                                'Callback',@(~,~) obj.UpdateDisplay);
-    display_layout.Heights = [-1 22];                      
+
+    h.recovery_ax = axes('Parent',display_layout);
+
+                           
+    display_layout.Heights = [-3 22 -1];                      
     
     % Drawing tab
     drawing_layout = uix.VBox('Parent',h.tab_panel,'Spacing',5,'Padding',5);
@@ -64,9 +68,7 @@ function SetupLayout(obj)
                                    'Callback',@(~,~) obj.UpdateKymograph);
     
     h.kymograph_ax = axes('Parent',kymograph_layout);
-    
     h.od_glcm_ax = axes('Parent',kymograph_layout);
-
     
     kymograph_layout.Heights = [22 -2 -1];
     

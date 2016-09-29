@@ -1,4 +1,4 @@
-function [px,py] = TrackJunction(flow, line_x, line_y, use_spline, np)
+function p = TrackJunction(flow, line, use_spline, np)
 % TrackJunction
 %    Uses pre-computed optical flow matrix 'flow' to track a junction
 %    defined by the starting points line_x and line_y. Optionally use
@@ -18,31 +18,30 @@ function [px,py] = TrackJunction(flow, line_x, line_y, use_spline, np)
     FeedbackMessage('GarvanFrap','   Tracking Junction...');
 
 
-    if nargin < 4
+    if nargin < 3
         use_spline = true;
     end
-    if nargin < 5
+    if nargin < 4
         np = 10;
     end
     
-    if length(line_x) == 1 
+    if length(line) == 1 
         use_spline = false;
     end
     
     if use_spline
-        [px,py] = GetSpline(line_x,line_y,np);
+        p = GetSplineImg(line,np);
     else
-        px = line_x;
-        py = line_y;
+        p = line;
     end
-        
-    px = px';
-    py = py';
+            
+    p = p.';
     
     for i=2:size(flow,3)
 
-        xi = round(px(i-1,:));
-        yi = round(py(i-1,:));
+        pl = p(i-1,:);
+        xi = round(real(pl));
+        yi = round(imag(pl));
 
         xi = max(xi,1);
         yi = max(yi,1);
@@ -53,17 +52,12 @@ function [px,py] = TrackJunction(flow, line_x, line_y, use_spline, np)
 
         f = flow(ii);
 
-        xn = px(i-1,:) + real(f);
-        yn = py(i-1,:) + imag(f); 
+        pn = p(i-1,:) + f;
 
         if use_spline
-            [pxn,pyn] = GetSpline(xn,yn,np);
-        else
-            pxn = xn;
-            pyn = yn;
+            pn = GetSplineImg(pn,np);
         end
         
-        px(i,:) = pxn;
-        py(i,:) = pyn;
+        p(i,:) = pn;
 
     end

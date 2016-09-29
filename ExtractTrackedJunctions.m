@@ -1,6 +1,6 @@
-function results = ExtractTrackedJunctions(frames, tracked_x, tracked_y)
+function results = ExtractTrackedJunctions(frames, tracked)
 
-    lines = 1:length(tracked_x);
+    lines = 1:length(tracked);
     np = 600;
     ndil = 4;
     
@@ -9,9 +9,9 @@ function results = ExtractTrackedJunctions(frames, tracked_x, tracked_y)
         im = frames{j};
 
         for k=lines
-            [X,Y,IDX] = GetThickLine(size(im),tracked_x{k}(j,:),tracked_y{k}(j,:),np,ndil);        
+            [P,IDX] = GetThickLine(size(im),tracked{k}(j,:),np,ndil);        
             
-            R2(j,k) = abs((X(2)-X(1)) + 1i*(Y(2)-Y(1)));
+            R2(j,k) = abs(P(2)-P(1));
             l2(:,j,k) = sum(im(IDX),2);
 
         end
