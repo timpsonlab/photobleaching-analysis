@@ -1,4 +1,4 @@
-function [frap,cache_file] = LoadFRAPData(folder, subfolder)
+function [frap,cache_file] = LoadFRAPData(folder, subfolder, options)
 % LoadFRAPData Load photobleaching data from file  
 %    Expects data to be organised as described in README.txt
 %    Caches data for faster subsequent load
@@ -7,6 +7,14 @@ function [frap,cache_file] = LoadFRAPData(folder, subfolder)
 % 
 %    Caches can be invalidated by changing the version number 'v'
 
+    if nargin < 3
+        options = struct();
+    end
+    
+    if ~isfield(options,'use_drift_compensation')
+        options.use_drift_compensation = false;
+    end
+    
     % Search string for pre-bleach images
     pre_bleach_magic_string = '*Pre*'; 
     
@@ -24,7 +32,7 @@ function [frap,cache_file] = LoadFRAPData(folder, subfolder)
     FeedbackMessage('GarvanFrap',['Loading FRAP Data from: ' folder subfolder])
     
     % Load Cached file, if it exists
-    if exist(cache_file,'file')
+    if exist(cache_file,'file') && false
         ver = load(cache_file,'v');
         if ~isfield(ver,v) || ver.v >= v
             FeedbackMessage('GarvanFrap','   Found valid cache file; loading...')
@@ -48,6 +56,13 @@ function [frap,cache_file] = LoadFRAPData(folder, subfolder)
         after = LoadImagesFromFolder(post_bleach_registered_magic_string);
     end
     
+    % Compensate for drift
+    if options.use_drift_compensation
+        FeedbackMessage('GarvanFrap','   Performing drift compensation');
+        after = CompensateDrift(after, options);
+    end
+    
+    
     % Load Leica ROI file
     % You will need to modify this section for other microscope formats
     image_width_px = size(before{1},1);
@@ -66,7 +81,7 @@ function [frap,cache_file] = LoadFRAPData(folder, subfolder)
     end
     
     FeedbackMessage('GarvanFrap','   Computing optical flow...');
-    flow = ComputeOpticalFlow(after);
+    flow = ComputeOpticalFlow(after,options);
     
     % Load data into a structure and save to disk
     frap = struct();
@@ -80,7 +95,7 @@ function [frap,cache_file] = LoadFRAPData(folder, subfolder)
     frap.px_per_um = px_per_um;
     frap.v = v;
  
-    save(cache_file,'-struct','frap');
+    %save(cache_file,'-struct','frap');
     
     function [images, px_per_um] = LoadImagesFromFolder(search)
     % Load a series of numbered images from a folder

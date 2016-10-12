@@ -5,7 +5,7 @@ function [recovery,initial,complete] = ExtractRecovery(before, after, roi, p)
     end
 
     roi_x = real(roi);
-    roi_y = real(roi);
+    roi_y = imag(roi);
     
     px = real(p);
     py = imag(p);

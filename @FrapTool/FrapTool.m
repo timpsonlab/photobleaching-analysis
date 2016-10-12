@@ -8,6 +8,9 @@ classdef FrapTool < handle
         current_data
         last_folder;
         
+        folder;
+        subfolders;
+        
         junction_types = {'Bleach','Adjacent','Distant'};
         junction_color = {[1 0 0],[0 1 0],[0 0 1]};
         junctions;
@@ -28,8 +31,9 @@ classdef FrapTool < handle
 
             addpath('layout');
 
-            SetupLayout(obj);
-            SetupMenu(obj);
+            obj.SetupLayout();
+            obj.SetupMenu();
+            obj.SetupCallbacks();
             
             if ispref('FrapTool','last_folder')
                 obj.last_folder = getpref('FrapTool','last_folder');
@@ -47,7 +51,6 @@ classdef FrapTool < handle
         end
         
         function SetupMenu(obj)
-
             file_menu = uimenu(obj.fh,'Label','File');
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
             uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
@@ -57,6 +60,13 @@ classdef FrapTool < handle
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
             uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) obj.TrackJunctions,'Accelerator','T');
         end
+        
+        function SetupCallbacks(obj)
+            h = obj.handles;
+            h.files_list.Callback = @(list,~) obj.SwitchDataset(list.Value);
+            h.reload_button.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
+        end
+        
         
         function LoadData(obj,root)
             
@@ -69,17 +79,29 @@ classdef FrapTool < handle
             
             obj.last_folder = root;
                 
-            [folder,subfolders] = GetFRAPSubFolders(root);
-
-            wh = waitbar(0,'Loading...');
-            for i=2
-                [obj.current_data,obj.datasets(i).cache_file] = LoadFRAPData(folder,subfolders{i});
-                obj.datasets(i).image = obj.current_data.before{1};
-                waitbar(i/length(subfolders),wh);
-            end
-            close(wh);
+            [obj.folder,obj.subfolders] = GetFRAPSubFolders(root);
+            
+            obj.UpdateDatasetList();
+        end
+        
+        function UpdateDatasetList(obj)
+           obj.handles.files_list.String = obj.subfolders;
+        end
+        
+        function SwitchDataset(obj,i)
+            
+            options.use_drift_compensation = obj.handles.drift_compensation_popup.Value == 2;
+            options.image_smoothing_kernel_width = getNumFromPopup(obj.handles.image_smoothing_popup);
+            options.flow_smoothing_kernel_width = getNumFromPopup(obj.handles.flow_smoothing_popup);
+            options.frame_binning = getNumFromPopup(obj.handles.frame_binning_popup);
+            
+            [obj.current_data] = LoadFRAPData(obj.folder,obj.subfolders{i},options);
             
             obj.SetCurrent();
+            
+            function v = getNumFromPopup(h)
+                v = str2double(h.String{h.Value}); 
+            end
             
         end
         
@@ -108,11 +130,20 @@ classdef FrapTool < handle
                 daspect(ax(i),[1 1 1]);
 
                 hold(ax(i),'on');
-                obj.handles.(roi_h{i}) = plot(ax(i), roi_x, roi_y, 'r', 'HitTest', 'off');
+                obj.handles.(roi_h{i}) = plot(ax(i), roi_x, roi_y, 'b', 'HitTest', 'off');
             end
-                        
+            
+            obj.handles.display_tracked_roi = plot(obj.handles.image_ax, roi_x, roi_y, 'r', 'HitTest', 'off');
+            
             z = zeros(size(d.after{1}));
             obj.handles.mask_image = image(z,'AlphaData',z,'Parent',obj.handles.image_ax);
+            
+
+            % Get centre of roi and stabalise using optical flow
+            roi = d.roi_x + 1i * d.roi_y;
+            p = mean(roi);
+            obj.tracked_roi_centre = TrackJunction(obj.current_data.flow,p) - p;
+
             
             obj.UpdateDisplay();
             
@@ -128,6 +159,7 @@ classdef FrapTool < handle
             recovery = obj.GetRecovery('stable');
             plot(rec_h,recovery);
             
+                   
         end
         
         function UpdateDisplay(obj)
@@ -156,6 +188,12 @@ classdef FrapTool < handle
             
             obj.handles.mask_image.CData = ind2rgb(mask_im+1,cmap);
             obj.handles.mask_image.AlphaData = 0.8*(mask_im>0);
+            
+            d = obj.current_data;
+            
+            offset = obj.tracked_roi_centre(cur);
+            set(obj.handles.display_tracked_roi,'XData',d.roi_x+real(offset),...
+                                                'YData',d.roi_y+imag(offset));
                         
         end
         
@@ -165,10 +203,7 @@ classdef FrapTool < handle
             roi = d.roi_x + 1i * d.roi_y;
             if nargin > 1 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
-                p = mean(roi);
-                roi = roi - p;
-                p = TrackJunction(obj.current_data.flow,p);
-                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi, p); 
+                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi, obj.tracked_roi_centre); 
             else
                 [~,~,recovery] = ExtractRecovery(d.before, d.after, roi);
             end
