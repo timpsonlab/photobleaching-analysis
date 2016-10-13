@@ -11,7 +11,8 @@ classdef Junction < handle
     end
 
     properties(Constant)
-         junction_color = {[1 0 0],[0 1 0],[0 0 1]};
+        types = {'Bleach','Adjacent','Distant'};
+        junction_color = {[1 0 0],[0 1 0],[0 0 1]};
     end
 
     methods
@@ -60,6 +61,10 @@ classdef Junction < handle
         
         function tracked = IsTracked(obj)
             tracked = ~isempty(obj.tracked_positions);
+        end
+        
+        function empty = IsEmpty(obj)
+            empty = isempty(obj.positions);
         end
 
         function delete(obj)

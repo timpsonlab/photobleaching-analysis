@@ -102,6 +102,7 @@ classdef FrapDataReader
         frap.px_per_unit = double(px_size.value);
         frap.length_unit = char(px_size.unit.getSymbol);
         frap.dt = 1; % TODO!
+        frap.name = obj.group{s+1};
         
         frap.roi = obj.GetROI(s);
         

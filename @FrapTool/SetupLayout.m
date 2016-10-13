@@ -63,35 +63,7 @@ function SetupLayout(obj)
     display_layout_top.Widths = [-1 -1];                      
     
     % Drawing tab
-    drawing_layout = uix.VBox('Parent',h.tab_panel,'Spacing',5,'Padding',5);
-
-    drawing_buttons_layout = uix.HBox('Parent',drawing_layout);
-    
-    for i=1:length(obj.junction_types)
-        h.new_junction(i) = uicontrol('Style','pushbutton','String',['Add ' obj.junction_types{i} ' Jcn'],...
-                                      'Parent',drawing_buttons_layout,...
-                                      'Callback',@(~,~) obj.StartNewJunction(i),...
-                                      'ForegroundColor',Junction.junction_color{i});
-    end
-    h.undo_button = uicontrol('Style','pushbutton','String','Undo',...
-                              'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.UndoPoint);
-    h.delete_button = uicontrol('Style','pushbutton','String','Delete',...
-                              'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.DeleteJunction);
-
-    uix.Empty('Parent',drawing_buttons_layout);
-                          
-    h.save_button = uicontrol('Style','pushbutton','String','Save',...
-                              'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.SaveJunctions);
-
-                          
-    uix.Empty('Parent',drawing_buttons_layout);
-    set(drawing_buttons_layout,'Widths',[100*ones(1,length(obj.junction_types)+2) 10 100 -1]);
-    
-    h.draw_ax = axes('Parent',drawing_layout);
-    h.draw_image = imagesc(0,'Parent',h.draw_ax,'HitTest','on','ButtonDownFcn',@(~,~) obj.MouseDown);
-    h.draw_frap_roi = plot(h.image_ax,nan,nan,'r');
-    
-    drawing_layout.Heights = [22 -1];
+    obj.junction_artist = JunctionArtist(h.tab_panel);
     
     % Kympograph tab
     kymograph_layout = uix.VBox('Parent',h.tab_panel,'Spacing',5,'Padding',5);
