@@ -1,7 +1,7 @@
 classdef Junction < handle
 
     properties
-        positions = nan;
+        positions;
         tracked_positions;
         type;
     end
@@ -22,7 +22,14 @@ classdef Junction < handle
         end
 
         function CreatePlot(obj,ax)
-            obj.handle = plot(ax,real(obj.positions),imag(obj.positions),...
+            
+            if isempty(obj.positions)
+                p = nan;
+            else
+                p = obj.positions;
+            end
+            
+            obj.handle = plot(ax,real(p),imag(p),...
                 'Marker','o',...
                 'MarkerSize',7,...
                 'Color','k',...
