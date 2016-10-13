@@ -4,24 +4,20 @@ classdef FrapTool < handle
         fh;
         handles;
         
+        reader;
+        
         datasets;
-        current_data
+        current_index;
+        data;
         last_folder;
-        
-        folder;
-        subfolders;
-        
+                
         junction_types = {'Bleach','Adjacent','Distant'};
-        junction_color = {[1 0 0],[0 1 0],[0 0 1]};
-        junctions;
-        junction_h;
-        junction_type;
+        
+        junctions = [];
         
         rois;
         tracked_roi_centre;
-        
-        tracked_junctions;
-        
+                
         draw_mode = 'new junction';
     end
    
@@ -39,7 +35,7 @@ classdef FrapTool < handle
                 obj.last_folder = getpref('FrapTool','last_folder');
             end
                         
-            obj.LoadData(obj.last_folder);
+            %obj.LoadData(obj.last_folder);
             
         end
         
@@ -71,33 +67,64 @@ classdef FrapTool < handle
         function LoadData(obj,root)
             
             if (nargin < 2)
-                root = uigetdir(obj.last_folder);
+                [file, root] = uigetfile('*.*','Choose File...',obj.last_folder);
             end
-            if root == 0
+            if file == 0
                 return
             end
             
             obj.last_folder = root;
-                
-            [obj.folder,obj.subfolders] = GetFRAPSubFolders(root);
+            obj.reader = FrapDataReader([root file]);
+                       
+            %[obj.folder,obj.subfolders] = GetFRAPSubFolders(root);
             
             obj.UpdateDatasetList();
         end
         
         function UpdateDatasetList(obj)
-           obj.handles.files_list.String = obj.subfolders;
+           obj.handles.files_list.String = obj.reader.groups;
+           obj.handles.files_list.Value = 1;
         end
         
         function SwitchDataset(obj,i)
+          
+            obj.current_index = i;
+            obj.data = obj.reader.GetGroup(obj.reader.groups{i});
             
             options.use_drift_compensation = obj.handles.drift_compensation_popup.Value == 2;
             options.image_smoothing_kernel_width = getNumFromPopup(obj.handles.image_smoothing_popup);
             options.flow_smoothing_kernel_width = getNumFromPopup(obj.handles.flow_smoothing_popup);
             options.frame_binning = getNumFromPopup(obj.handles.frame_binning_popup);
             
-            [obj.current_data] = LoadFRAPData(obj.folder,obj.subfolders{i},options);
+            if options.use_drift_compensation
+                FeedbackMessage('GarvanFrap','Performing drift compensation');
+                obj.data.after = CompensateDrift(obj.data.after, options);
+            end
+
+            FeedbackMessage('GarvanFrap','Computing Optical Flow');
+            obj.data.flow = ComputeOpticalFlow(obj.data.after,options);
+            
+            FeedbackMessage('GarvanFrap','Finished Loading');
+            
+            for i=1:length(obj.junctions)
+                delete(obj.junctions(i));
+            end
+            obj.junctions = [];
+            
+            jcns = obj.LoadJunctions();
+            if length(jcns) >= obj.current_index
+                obj.junctions = jcns{obj.current_index};
+            end
+                        
+            obj.UpdateKymographList();
+            
             
             obj.SetCurrent();
+
+            for i=1:length(obj.junctions)
+                obj.junctions(i).CreatePlot(obj.handles.draw_ax);
+            end
+
             
             function v = getNumFromPopup(h)
                 v = str2double(h.String{h.Value}); 
@@ -107,20 +134,20 @@ classdef FrapTool < handle
         
         function SetCurrent(obj)
         
-            n = length(obj.current_data.after);
+            n = length(obj.data.after);
             obj.handles.image_scroll.Max = n;
             obj.handles.image_scroll.Value = 1;
             obj.handles.image_scroll.SliderStep = [1/n 1/n];
             
-            d = obj.current_data;
+            d = obj.data;
             
             ax = [obj.handles.image_ax, obj.handles.draw_ax];
             image_h = {'image', 'draw_image'};
             roi_h = {'image_frap_roi', 'draw_frap_roi'};
 
-            if length(d.roi_x) > 1
-                roi_x = [d.roi_x(:); d.roi_x(1)];
-                roi_y = [d.roi_y(:); d.roi_y(1)];
+            if length(d.roi.x) > 1
+                roi_x = [d.roi.x(:); d.roi.x(1)];
+                roi_y = [d.roi.y(:); d.roi.y(1)];
             end
                 
             for i=1:length(ax)
@@ -130,7 +157,7 @@ classdef FrapTool < handle
                 daspect(ax(i),[1 1 1]);
 
                 hold(ax(i),'on');
-                obj.handles.(roi_h{i}) = plot(ax(i), roi_x, roi_y, 'b', 'HitTest', 'off');
+                obj.handles.(roi_h{i}) = plot(ax(i), roi_x, roi_y, 'g', 'HitTest', 'off');
             end
             
             obj.handles.display_tracked_roi = plot(obj.handles.image_ax, roi_x, roi_y, 'r', 'HitTest', 'off');
@@ -140,9 +167,9 @@ classdef FrapTool < handle
             
 
             % Get centre of roi and stabalise using optical flow
-            roi = d.roi_x + 1i * d.roi_y;
+            roi = d.roi.x + 1i * d.roi.y;
             p = mean(roi);
-            obj.tracked_roi_centre = TrackJunction(obj.current_data.flow,p) - p;
+            obj.tracked_roi_centre = TrackJunction(obj.data.flow,p) - p;
 
             
             obj.UpdateDisplay();
@@ -165,7 +192,7 @@ classdef FrapTool < handle
         function UpdateDisplay(obj)
             cur = round(obj.handles.image_scroll.Value);
             
-            cur_image = double(obj.current_data.after{cur});
+            cur_image = double(obj.data.after{cur});
             cur_image =  cur_image / prctile(cur_image(:),99);
             out_im = repmat(cur_image,[1 1 3]);
             out_im(out_im > 1) = 1;
@@ -179,9 +206,12 @@ classdef FrapTool < handle
                     0 1 0
                     0 0 1];
                         
-            for i=1:length(obj.tracked_junctions)            
-                [~,idx] = GetThickLine(size(cur_image),obj.tracked_junctions{i}(cur,:),600,ndil); 
-                mask_im(idx) = obj.junction_type(i);
+            for i=1:length(obj.junctions)
+                tp = obj.junctions(i).tracked_positions;
+                if ~isempty(tp)
+                    [~,idx] = GetThickLine(size(cur_image),tp(cur,:),600,ndil); 
+                    mask_im(idx) = obj.junctions(i).type;
+                end
             end
             
             obj.handles.image.CData = out_im;
@@ -189,18 +219,18 @@ classdef FrapTool < handle
             obj.handles.mask_image.CData = ind2rgb(mask_im+1,cmap);
             obj.handles.mask_image.AlphaData = 0.8*(mask_im>0);
             
-            d = obj.current_data;
+            d = obj.data;
             
             offset = obj.tracked_roi_centre(cur);
-            set(obj.handles.display_tracked_roi,'XData',d.roi_x+real(offset),...
-                                                'YData',d.roi_y+imag(offset));
+            set(obj.handles.display_tracked_roi,'XData',d.roi.x+real(offset),...
+                                                'YData',d.roi.y+imag(offset));
                         
         end
         
         function recovery = GetRecovery(obj,opt)
-            d = obj.current_data;
+            d = obj.data;
 
-            roi = d.roi_x + 1i * d.roi_y;
+            roi = d.roi.x + 1i * d.roi.y;
             if nargin > 1 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
                 [~,~,recovery] = ExtractRecovery(d.before, d.after, roi, obj.tracked_roi_centre); 
@@ -210,53 +240,52 @@ classdef FrapTool < handle
         end
         
         function StartNewJunction(obj, junction_type)
-            obj.junction_h(end+1) = plot(obj.handles.draw_ax,nan,nan,'Marker','o','MarkerSize',7,...
-                'Color','k','LineStyle','-','MarkerFaceColor',obj.junction_color{junction_type});
-            obj.junctions{end+1} = [];
-            obj.junction_type(end+1) = junction_type;
+            j = Junction(obj.handles.draw_ax,junction_type);
+            
+            if isempty(obj.junctions)  
+                obj.junctions = j;
+            else
+                obj.junctions(end+1) = j;
+            end
+
             obj.draw_mode = 'new_junction';
     
+            obj.UpdateKymographList();
+        end
+
+        function UpdateKymographList(obj)           
             names = cell(size(obj.junctions));
             for i=1:length(obj.junctions)
-                names{i} = ['Junction ' num2str(i) ' (' obj.junction_types{obj.junction_type(i)} ' junction)'];
+                names{i} = ['Junction ' num2str(i) ' (' obj.junction_types{obj.junctions(i).type} ' junction)'];
             end
             obj.handles.kymograph_select.String = names;
         end
-
+        
         function MouseDown(obj)
             
             p0 = obj.GetCurrentPoint();    
             
+            if isempty(obj.junctions)
+                return
+            end
+
             switch obj.draw_mode
                 case 'new_junction'
 
-                    if isempty(obj.junctions)
-                        return
-                    end
-
-                    obj.junctions{end}(end+1) = p0;
-
-                    p = obj.junctions{end};
-                    set(obj.junction_h(end),'XData',real(p),'YData',imag(p));
+                    obj.junctions(end).AddPosition(p0);
                     
                 case 'delete'
                     
                     % Find closest junction
-                    min_dist = inf;
-                    min_jcn = 1;
+                    dist = zeros(size(obj.junctions));
                     for i=1:length(obj.junctions)
-                        dist = abs(obj.junctions{i} - p0);
-                        if min(dist) < min_dist
-                            min_dist = min(dist);
-                            min_jcn = i;
-                        end
+                        dist(i) = obj.junctions(i).ShortestDistanceToPosition(p0);
                     end
-    
-                    
+                    [~,min_jcn] = min(dist);
+
                     % Remove junction
+                    delete(obj.junctions(min_jcn));
                     obj.junctions(min_jcn) = [];
-                    delete(obj.junction_h(min_jcn));
-                    obj.junction_h(min_jcn) = [];
                     
             end
         end
@@ -268,9 +297,7 @@ classdef FrapTool < handle
         
         function UndoPoint(obj)
             if ~isempty(obj.junctions)
-                obj.junctions{end}(end,:) = [];
-                p = obj.junctions{end};
-                set(obj.junction_h(end),'XData',real(p),'YData',imag(p));
+                obj.junctions(end).RemoveLastPosition();
             end
         end
         
@@ -278,20 +305,39 @@ classdef FrapTool < handle
             obj.draw_mode = 'delete';
         end
         
+        function SaveJunctions(obj)
+            [junctions, save_name] = LoadJunctions(obj); %#ok
+            junctions{obj.current_index} = obj.junctions; %#ok
+            save(save_name,'junctions');
+        end
+        
+        function [jcns, save_name] = LoadJunctions(obj)
+            [path, file] = fileparts(obj.reader.file);
+            save_name = [path filesep file '-junctions.mat'];
+            jcns = {};
+            if exist(save_name,'file')
+                j = load(save_name);
+                if isfield(j,'junctions')
+                    jcns = j.junctions;
+                end
+            end
+        end
+        
+        function TrackJunction(obj, j)
+            np = 50;
+            p = obj.junctions(j).positions;
+            t = TrackJunction(obj.data.flow, p, true, np);
+            nb = length(obj.data.before);
+            t = [repmat(t(1,:),[nb 1]); t];
+
+            obj.junctions(j).tracked_positions = t;
+        end
+
         function TrackJunctions(obj)
-           
-            np = 20;
-            
+                       
             wh = waitbar(0, 'Tracking Junctions...');
             for i=1:length(obj.junctions)
-                p = obj.junctions{i};
-                
-                t = TrackJunction(obj.current_data.flow, p, true, np);
-                
-                nb = length(obj.current_data.before);
-                t = [repmat(t(1,:),[nb 1]); t];
-                
-                obj.tracked_junctions{i} = t;
+                obj.TrackJunction(i);
                 waitbar(i/length(obj.junctions));
             end
             close(wh);
@@ -303,20 +349,26 @@ classdef FrapTool < handle
             junction = obj.handles.kymograph_select.Value;
             [kymograph,r] = GenerateKymograph(obj, junction);
             
+            t = 1:size(kymograph,2);
+            
+            distance_label = ['Distance (' obj.data.length_unit ')'];
+            
             ax_h = obj.handles.kymograph_ax;
-            imagesc(kymograph,'Parent',ax_h);
+            imagesc(t,r,kymograph,'Parent',ax_h);
             ax_h.TickDir = 'out';
             ax_h.Box = 'off';
+            xlabel(ax_h,'Time (frames)');
+            ylabel(ax_h,distance_label);
             
             lim = 500;
             
             
-            r = r / obj.current_data.px_per_um;
+            r = r / obj.data.px_per_unit;
             contrast = ComputeKymographOD_GLCM(r,kymograph,lim);
             
             h_ax = obj.handles.od_glcm_ax;
             plot(obj.handles.od_glcm_ax,contrast);
-            xlabel(h_ax,'Distance');
+            xlabel(h_ax,distance_label);
             ylabel(h_ax,'Contrast');
         end
         
@@ -332,21 +384,27 @@ classdef FrapTool < handle
                 return;
             end
             
-            for i=1:length(obj.tracked_junctions)
-                [kymograph,r] = obj.GenerateKymograph(i);
-                filename = [obj.current_data.name '_junction_' num2str(i) '_' obj.junction_types{obj.junction_type(i)} '.tif'];
+            for i=1:length(obj.junctions)
+                kymograph = obj.GenerateKymograph(i);
+                filename = [obj.data.name '_junction_' num2str(i) '_' obj.junction_types{obj.junction_type(i)} '.tif'];
                 imwrite(kymograph,[export_folder filesep filename]);
             end
             
         end
         
-        function [kymograph,r] = GenerateKymograph(obj, junction)
+        function [kymograph,r] = GenerateKymograph(obj, j)
             
-            p = obj.tracked_junctions{junction};
+            if ~obj.junctions(j).IsTracked()
+                obj.TrackJunction(j);
+            end
+
+            p = obj.junctions(j).tracked_positions;
             
-            images = [obj.current_data.before, obj.current_data.after];
-            
-            results = ExtractTrackedJunctions(images, {p});
+            images = [obj.data.before, obj.data.after];
+
+            options.line_width = 9;
+
+            results = ExtractTrackedJunctions(images, {p}, options);
             [kymograph,r] = GetCorrectedKymograph(results);
 
         end

@@ -14,15 +14,11 @@ function p = TrackJunction(flow, line, use_spline, np)
 %       along the junction 
 %    np: number of points to use along spline
 
-
-    FeedbackMessage('GarvanFrap','   Tracking Junction...');
-
-
     if nargin < 3
         use_spline = true;
     end
     if nargin < 4
-        np = 10;
+        np = 50;
     end
     
     if length(line) == 1 
@@ -36,6 +32,8 @@ function p = TrackJunction(flow, line, use_spline, np)
     end
             
     p = p.';
+
+    p = repmat(p,[size(flow,3) 1]);
     
     for i=2:size(flow,3)
 
@@ -48,14 +46,15 @@ function p = TrackJunction(flow, line, use_spline, np)
         xi = min(xi,size(flow,2));
         yi = min(yi,size(flow,1));
 
-        ii = sub2ind(size(flow),yi,xi,repmat(i,size(yi)));
+        ii = sub2ind(size(flow),yi,xi);
+        flowi = flow(:,:,i);
 
-        f = flow(ii);
+        f = double(flowi(ii));
 
         pn = p(i-1,:) + f;
 
         if use_spline
-            pn = GetSplineImg(pn,np);
+            pn = GetSplineImg(pn,np,'linear');
         end
         
         p(i,:) = pn;

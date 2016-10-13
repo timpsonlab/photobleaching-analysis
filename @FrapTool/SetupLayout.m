@@ -68,15 +68,21 @@ function SetupLayout(obj)
         h.new_junction(i) = uicontrol('Style','pushbutton','String',['Add ' obj.junction_types{i} ' Jcn'],...
                                       'Parent',drawing_buttons_layout,...
                                       'Callback',@(~,~) obj.StartNewJunction(i),...
-                                      'ForegroundColor',obj.junction_color{i});
+                                      'ForegroundColor',Junction.junction_color{i});
     end
     h.undo_button = uicontrol('Style','pushbutton','String','Undo',...
                               'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.UndoPoint);
     h.delete_button = uicontrol('Style','pushbutton','String','Delete',...
                               'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.DeleteJunction);
-    
+
     uix.Empty('Parent',drawing_buttons_layout);
-    set(drawing_buttons_layout,'Widths',[100*ones(1,length(obj.junction_types)+2) -1]);
+                          
+    h.save_button = uicontrol('Style','pushbutton','String','Save',...
+                              'Parent',drawing_buttons_layout,'Callback',@(~,~) obj.SaveJunctions);
+
+                          
+    uix.Empty('Parent',drawing_buttons_layout);
+    set(drawing_buttons_layout,'Widths',[100*ones(1,length(obj.junction_types)+2) 10 100 -1]);
     
     h.draw_ax = axes('Parent',drawing_layout);
     h.draw_image = imagesc(0,'Parent',h.draw_ax,'HitTest','on','ButtonDownFcn',@(~,~) obj.MouseDown);

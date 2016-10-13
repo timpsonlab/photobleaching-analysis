@@ -1,9 +1,18 @@
-function results = ExtractTrackedJunctions(frames, tracked)
+function results = ExtractTrackedJunctions(frames, tracked, options)
+
+    if nargin < 3
+        options = struct();
+    end
+
+    if ~isfield(options,'line_width')
+        options.line_width = 9;
+    end
+    
 
     lines = 1:length(tracked);
     np = 600;
-    ndil = 4;
-    
+    ndil = ceil((options.line_width-1)/2);
+
     for j=1:length(frames)
 
         im = frames{j};
