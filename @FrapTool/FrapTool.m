@@ -26,6 +26,7 @@ classdef FrapTool < handle
         function obj = FrapTool
 
             addpath('layout');
+            GetBioformats();
 
             obj.SetupLayout();
             obj.SetupMenu();
@@ -75,9 +76,7 @@ classdef FrapTool < handle
             
             obj.last_folder = root;
             obj.reader = FrapDataReader([root file]);
-                       
-            %[obj.folder,obj.subfolders] = GetFRAPSubFolders(root);
-            
+                                   
             obj.UpdateDatasetList();
         end
         
@@ -182,6 +181,8 @@ classdef FrapTool < handle
             recovery = obj.GetRecovery();
             plot(rec_h,recovery);
             hold(rec_h,'on');
+            xlabel(rec_h,'Time (frames)');
+            ylabel(rec_h,'Intensity');
 
             recovery = obj.GetRecovery('stable');
             plot(rec_h,recovery);
@@ -199,7 +200,7 @@ classdef FrapTool < handle
             
             mask_im = zeros(size(cur_image));
             
-            ndil = 4;
+            ndil = 4; % TODO
             
             cmap = [0 0 0
                     1 0 0

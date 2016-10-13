@@ -44,7 +44,9 @@ function SetupLayout(obj)
     options_layout.Heights = [22 150 22 -1];
     
     % Display tab
-    display_layout = uix.VBox('Parent',h.tab_panel);
+    display_layout_top = uix.HBox('Parent',h.tab_panel);
+    
+    display_layout = uix.VBox('Parent',display_layout_top);
     h.image_ax = axes('Parent',display_layout);
     h.image = imagesc(0,'Parent',h.image_ax);
     h.display_frap_roi = plot(h.image_ax,nan,nan,'r');
@@ -54,10 +56,11 @@ function SetupLayout(obj)
                                'Value',1,'SliderStep',[1 1],'Parent',display_layout,...
                                'Callback',@(~,~) obj.UpdateDisplay);
 
-    h.recovery_ax = axes('Parent',display_layout);
+    h.recovery_ax = axes('Parent',display_layout_top);
 
                            
-    display_layout.Heights = [-3 22 -1];                      
+    display_layout.Heights = [-1 22];                      
+    display_layout_top.Widths = [-1 -1];                      
     
     % Drawing tab
     drawing_layout = uix.VBox('Parent',h.tab_panel,'Spacing',5,'Padding',5);
