@@ -19,6 +19,7 @@ function Compile(exit_on_fail)
     
     function run()
 
+        GetBioformats();
 
         tool_name = 'Photobleaching_Analysis';
         friendly_name = 'Photobleaching Analysis';
