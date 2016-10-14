@@ -37,17 +37,7 @@ function SetCurrent(obj)
 
 
     obj.UpdateDisplay();
-
-    rec_h = obj.handles.recovery_ax;
-    cla(rec_h);
-    recovery = obj.GetRecovery();
-    plot(rec_h,recovery);
-    hold(rec_h,'on');
-    xlabel(rec_h,'Time (frames)');
-    ylabel(rec_h,'Intensity');
-
-    recovery = obj.GetRecovery('stable');
-    plot(rec_h,recovery);
-
+    obj.UpdateRecoveryCurves();
+   
 
 end

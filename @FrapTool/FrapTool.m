@@ -17,6 +17,8 @@ classdef FrapTool < handle
         tracked_roi_centre;
         
         lh;
+        
+        pb_model;
                 
     end
    
@@ -63,6 +65,8 @@ classdef FrapTool < handle
             h = obj.handles;
             h.files_list.Callback = @(list,~) obj.SwitchDataset(list.Value);
             h.reload_button.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
+            h.estimate_photobleaching_button.Callback = @(~,~) obj.EstimatePhotobleaching();
+            h.photobleaching_popup.Callback = @(~,~) obj.UpdateRecoveryCurves();
         end
         
         
@@ -86,13 +90,35 @@ classdef FrapTool < handle
            obj.handles.files_list.Value = 1;
         end
         
-       
+        function EstimatePhotobleaching(obj)
+           
+            if isempty(obj.data)
+                warndlg('Please load data first');
+                return;
+            end
+            
+            mean_after = cellfun(@(x) nanmean(x(:)), obj.data.after);
+            mean_after = mean_after / mean_after(1);
+
+            obj.pb_model = FitExpWithPlateau(0:length(mean_after)-1,mean_after);
+            % = feval(fitmodel,1:length(mean_after));
+
+            obj.handles.photobleaching_status.ForegroundColor = 'g';
+            obj.handles.photobleaching_status.String = 'Loaded';
+            obj.handles.photobleaching_popup.Enable = 'on';
+            obj.handles.photobleaching_popup.Value = 2;
+            
+            obj.UpdateRecoveryCurves();
+        end
+        
         
         function UpdateDisplay(obj)
             cur = round(obj.handles.image_scroll.Value);
+
+            image1 = double(obj.data.after{1});
             
             cur_image = double(obj.data.after{cur});
-            cur_image =  cur_image / prctile(cur_image(:),99);
+            cur_image =  cur_image / prctile(image1(:),99);
             out_im = repmat(cur_image,[1 1 3]);
             out_im(out_im > 1) = 1;
             
@@ -133,15 +159,39 @@ classdef FrapTool < handle
             roi = d.roi.x + 1i * d.roi.y;
             if nargin > 1 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
-                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi, obj.tracked_roi_centre); 
+                [recovery,initial] = ExtractRecovery(d.before, d.after, roi, obj.tracked_roi_centre); 
             else
-                [~,~,recovery] = ExtractRecovery(d.before, d.after, roi);
+                [recovery,initial] = ExtractRecovery(d.before, d.after, roi);
             end
+            
+            initial_intensity = mean(initial);
+            
+            if ~isempty(obj.pb_model) && obj.handles.photobleaching_popup.Value == 2
+                pb_curve = feval(obj.pb_model,0:length(recovery)-1);
+                recovery = recovery ./ pb_curve;
+            end
+            
+            recovery = [initial; recovery];
+            recovery = recovery / initial_intensity;
+            
         end
 
         function UpdateKymographList(obj)           
             names = obj.junction_artist.GetJunctionNames();
             obj.handles.kymograph_select.String = names;
+        end
+        
+        function UpdateRecoveryCurves(obj)
+            rec_h = obj.handles.recovery_ax;
+            cla(rec_h);
+            recovery = obj.GetRecovery();
+            plot(rec_h,recovery);
+            hold(rec_h,'on');
+            xlabel(rec_h,'Time (frames)');
+            ylabel(rec_h,'Intensity');
+
+            recovery = obj.GetRecovery('stable');
+            plot(rec_h,recovery);
         end
         
         function TrackJunction(obj, j)
@@ -241,7 +291,7 @@ classdef FrapTool < handle
 
             p = jcn.tracked_positions;
             
-            images = [obj.data.before, obj.data.after];
+            images = [obj.data.before; obj.data.after];
 
             options.line_width = 9;
 

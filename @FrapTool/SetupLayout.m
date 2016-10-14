@@ -23,25 +23,39 @@ function SetupLayout(obj)
     % Options sidebar
     options_panel = uipanel(layout,'Title','Options');
     options_layout = uix.VBox('Parent',options_panel,'Spacing',2,'Padding',5);
-    uicontrol('Style','text','String','Correction','FontWeight','bold','Parent',options_layout);
-    correction_layout = uix.Grid('Parent',options_layout,'Spacing',5);
     
-    uicontrol('Style','text','String','Drift Compensation','Parent',correction_layout);
-    uicontrol('Style','text','String','Frame Binning','Parent',correction_layout);
-    uicontrol('Style','text','String','Image Smoothing','Parent',correction_layout);
-    uicontrol('Style','text','String','Flow Smoothing','Parent',correction_layout);
-    h.drift_compensation_popup = uicontrol('Style','popupmenu','String',{'Off','On'},'Parent',correction_layout,'Value',2);
-    h.frame_binning_popup = uicontrol('Style','popupmenu','String',{'1','2','4','8','16'},'Parent',correction_layout,'Value',4);
-    h.image_smoothing_popup = uicontrol('Style','popupmenu','String',{'0','2','3','4','5','6','7','8'},'Parent',correction_layout,'Value',5);
-    h.flow_smoothing_popup = uicontrol('Style','popupmenu','String',{'1','2','3','4','5','6','7','8','9','10','11','12'},'Parent',correction_layout,'Value',8);
-    
-    correction_layout.Widths = [100 -1];
-    correction_layout.Heights = [22 22 22 22];
+    uicontrol('Style','text','String','Motion Compensation','FontWeight','bold','Parent',options_layout);
+    grid = uix.Grid('Parent',options_layout,'Spacing',5);    
+    uicontrol('Style','text','String','Drift Compensation','Parent',grid);
+    uicontrol('Style','text','String','Frame Binning','Parent',grid);
+    uicontrol('Style','text','String','Image Smoothing','Parent',grid);
+    uicontrol('Style','text','String','Flow Smoothing','Parent',grid);
+    h.drift_compensation_popup = uicontrol('Style','popupmenu','String',{'Off','On'},'Parent',grid,'Value',2);
+    h.frame_binning_popup = uicontrol('Style','popupmenu','String',{'1','2','4','8','16'},'Parent',grid,'Value',4);
+    h.image_smoothing_popup = uicontrol('Style','popupmenu','String',{'0','2','3','4','5','6','7','8'},'Parent',grid,'Value',5);
+    h.flow_smoothing_popup = uicontrol('Style','popupmenu','String',{'1','2','3','4','5','6','7','8','9','10','11','12'},'Parent',grid,'Value',8);
+
+    grid.Widths = [100 -1];
+    grid.Heights = [22 22 22 22];
     
     h.reload_button = uicontrol('Style','pushbutton','String','Reload','Parent',options_layout);
+
+    uix.Empty('Parent',options_layout);    
+    uicontrol('Style','text','String','Photobleaching Correction','FontWeight','bold','Parent',options_layout);
+    grid = uix.Grid('Parent',options_layout,'Spacing',5);    
+    uicontrol('Style','text','String','Calibration','Parent',grid);
+    uicontrol('Style','text','String','Correction','Parent',grid);
+    h.photobleaching_status = uicontrol('Style','text','String','None Loaded','ForegroundColor','r','Parent',grid,'Value',2);
+    h.photobleaching_popup = uicontrol('Style','popupmenu','String',{'Off','On'},'Enable','off','Parent',grid);
+
+    grid.Widths = [100 -1];
+    grid.Heights = [18 22];
+    
+    h.estimate_photobleaching_button = uicontrol('Style','pushbutton','String','Estimate Photobleaching','Parent',options_layout);
+    
     
     uix.Empty('Parent',options_layout);
-    options_layout.Heights = [22 150 22 -1];
+    options_layout.Heights = [22 120 22 30 22 60 22 -1];
     
     % Display tab
     display_layout_top = uix.HBox('Parent',h.tab_panel);

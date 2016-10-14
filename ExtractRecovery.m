@@ -27,5 +27,5 @@ function [recovery,initial,complete] = ExtractRecovery(before, after, roi, p)
         mask = inpolygon(X,Y,roi_x+px(j),roi_y+py(j));
         recovery(j) = sum(im(mask));
     end
-    
-    complete = [initial recovery];
+        
+    complete = [initial; recovery];

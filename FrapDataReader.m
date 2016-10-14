@@ -78,7 +78,7 @@ classdef FrapDataReader
             obj.reader.setSeries(matching_id(i));
             
             n_t = obj.reader.getSizeT();
-            im{i} = cell([1 n_t]);
+            im{i} = cell([n_t 1]);
             
             for t=1:n_t
                 idx = obj.reader.getIndex(0,channel-1,t-1);

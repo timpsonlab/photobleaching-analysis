@@ -43,6 +43,7 @@ function corrected = CompensateDrift(frames,options)
     shift_y = interp1(frame_idx,shift_y,1:n,'spline');
 
     % Apply computed shifts 
+    corrected = cell(size(frames));
     corrected{1} = frames{1};
     
   %{
@@ -59,7 +60,7 @@ function corrected = CompensateDrift(frames,options)
         tform.T(3,1) = shift_x(i);
         tform.T(3,2) = shift_y(i);
         
-        corrected{i} = imwarp(frames{i},tform,'OutputView',view);
+        corrected{i} = imwarp(frames{i},tform,'OutputView',view,'FillValues',nan);
 
         %phase = 2*pi*(shift_x(i)*Nr+shift_y(i)*Nc);
         %corrected{i} = real(ifft2(fft_frames{i}.*exp(1i*phase)));
