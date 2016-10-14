@@ -5,7 +5,7 @@ function GetBioformats()
     if ~exist('bfmatlab', 'dir')
         
         disp('Downloading bioformats...');
-        bflink = 'http://downloads.openmicroscopy.org/bio-formats/5.2.6/artifacts/bfmatlab.zip';
+        bflink = 'http://downloads.openmicroscopy.org/bio-formats/5.2.3/artifacts/bfmatlab.zip';
         websave('bfmatlab.zip',bflink);
         unzip('bfmatlab.zip');
         delete('bfmatlab.zip');
