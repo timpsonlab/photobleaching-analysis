@@ -55,6 +55,7 @@ classdef FrapTool < handle
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
             uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
             uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
+            uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) obj.ProcessAll);
             uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
@@ -81,8 +82,9 @@ classdef FrapTool < handle
             
             obj.last_folder = root;
             obj.reader = FrapDataReader([root file]);
-                                   
+            pause(0.1);  
             obj.UpdateDatasetList();
+            obj.SwitchDataset(1);
         end
         
         function UpdateDatasetList(obj)
@@ -100,7 +102,7 @@ classdef FrapTool < handle
             mean_after = cellfun(@(x) nanmean(x(:)), obj.data.after);
             mean_after = mean_after / mean_after(1);
 
-            obj.pb_model = FitExpWithPlateau(0:length(mean_after)-1,mean_after);
+            obj.pb_model = FitExpWithPlateau((0:length(mean_after)-1)',double(mean_after));
             % = feval(fitmodel,1:length(mean_after));
 
             obj.handles.photobleaching_status.ForegroundColor = 'g';
@@ -274,8 +276,8 @@ classdef FrapTool < handle
 
             dat = table();
             dat.T = (0:length(recovery_untracked)-1)';
-            dat.Tracked = recovery_tracked';
-            dat.Untracked = recovery_untracked';
+            dat.Tracked = recovery_tracked;
+            dat.Untracked = recovery_untracked;
             
             writetable(dat,[export_folder filesep obj.data.name '_recovery.csv']);
             

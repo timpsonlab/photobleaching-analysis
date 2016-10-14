@@ -82,7 +82,7 @@ classdef FrapDataReader
             
             for t=1:n_t
                 idx = obj.reader.getIndex(0,channel-1,t-1);
-                im{i}{t} = bfGetPlane(obj.reader, idx+1); 
+                im{i}{t} = single(bfGetPlane(obj.reader, idx+1)); 
             end
             
         end
