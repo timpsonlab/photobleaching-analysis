@@ -14,7 +14,21 @@ function SetupLayout(obj)
                                 
     h = struct();
     
-    layout = uix.HBox('Parent',obj.fh,'Spacing',5,'Padding',5);
+    color = [117,181,170]/255;
+    
+    super_layout = uix.VBox('Parent',obj.fh,'Spacing',5);
+    
+    layout = uix.HBox('Parent',super_layout,'Spacing',5,'Padding',5);
+    
+    message_layout = uix.VBox('Parent',super_layout,'Padding',3,'BackgroundColor',color);
+    h.message_text = uicontrol('Style','text','Parent',message_layout,...
+                               'BackgroundColor',color,'ForegroundColor','k',...
+                               'FontWeight','bold','HorizontalAlignment','left',...
+                               'FontSize',10,'String','Choose a dataset to load');
+    MessageHandler.addListener('GarvanFrap',h.message_text);
+    
+    super_layout.Heights = [-1 22];
+    
     
     h.files_list = uicontrol('Style','listbox','Parent',layout);
     

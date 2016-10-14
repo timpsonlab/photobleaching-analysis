@@ -136,7 +136,7 @@ classdef FrapTool < handle
                 tp = jcns(i).tracked_positions;
                 if ~isempty(tp)
                     [~,idx] = GetThickLine(size(cur_image),tp(cur,:),600,ndil); 
-                    mask_im(idx) = jcns.type;
+                    mask_im(idx) = jcns(i).type;
                 end
             end
             

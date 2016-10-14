@@ -13,14 +13,14 @@ function SwitchDataset(obj,i)
     options.frame_binning = getNumFromPopup(obj.handles.frame_binning_popup);
 
     if options.use_drift_compensation
-        FeedbackMessage('GarvanFrap','Performing drift compensation');
+        MessageHandler.send('GarvanFrap','Performing drift compensation...');
         obj.data.after = CompensateDrift(obj.data.after, options);
     end
 
-    FeedbackMessage('GarvanFrap','Computing Optical Flow');
+    MessageHandler.send('GarvanFrap','Computing optical flow...');
     obj.data.flow = ComputeOpticalFlow(obj.data.after,options);
 
-    FeedbackMessage('GarvanFrap','Finished Loading');
+    MessageHandler.send('GarvanFrap','Finished Loading');
 
     obj.junction_artist.SetDataset(obj.data.after{1},...
                                    obj.data.roi,...
