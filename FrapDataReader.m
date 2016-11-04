@@ -78,6 +78,13 @@ classdef FrapDataReader
             obj.reader.setSeries(matching_id(i));
             
             n_t = obj.reader.getSizeT();
+            
+            % Kludge for LIF files - we don't seem to get dt out correctly
+            dt_leica = str2double(obj.reader.getSeriesMetadataValue('Image|LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
+            if isnan(dt_leica)
+                dt_leica = str2double(obj.reader.getSeriesMetadataValue('Image|Block_FRAP|LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
+            end
+            
             im{i} = cell([n_t 1]);
             
             for t=1:n_t
@@ -94,14 +101,21 @@ classdef FrapDataReader
         p0 = obj.reader.getIndex(0,channel-1,0);
         p1 = obj.reader.getIndex(0,channel-1,1);
         
-        t0 = obj.meta.getPlaneDeltaT(s, p0);
-        t1 = obj.meta.getPlaneDeltaT(s, p1);
+        dt = obj.meta.getPixelsTimeIncrement(s);
+        
+        if isempty(dt)
+            if isfinite(dt_leica)
+                dt = dt_leica;
+            else
+                dt = 1;
+            end
+        end
         
         frap.before = im{1};
         frap.after = im{2}; 
         frap.px_per_unit = double(px_size.value);
         frap.length_unit = char(px_size.unit.getSymbol);
-        frap.dt = 1; % TODO!
+        frap.dt = dt;
         frap.name = obj.group{s+1};
         
         frap.roi = obj.GetROI(s);

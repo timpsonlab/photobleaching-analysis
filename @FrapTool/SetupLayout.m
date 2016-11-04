@@ -37,6 +37,17 @@ function SetupLayout(obj)
     % Options sidebar
     options_panel = uipanel(layout,'Title','Options');
     options_layout = uix.VBox('Parent',options_panel,'Spacing',2,'Padding',5);
+
+    uicontrol('Style','text','String','Data','FontWeight','bold','Parent',options_layout);
+    grid = uix.Grid('Parent',options_layout,'Spacing',5);    
+    uicontrol('Style','text','String','Time Step (s)','Parent',grid,'Enable','inactive');
+    uicontrol('Style','text','String','Pixel Size (um)','Parent',grid,'Enable','inactive');
+    h.dt_edit = uicontrol('Style','edit','String','1','Parent',grid);
+    h.pixel_size_edit = uicontrol('Style','edit','String','1','Parent',grid);
+
+    grid.Widths = [100 -1];
+    grid.Heights = [22 22];
+
     
     uicontrol('Style','text','String','Motion Compensation','FontWeight','bold','Parent',options_layout);
     grid = uix.Grid('Parent',options_layout,'Spacing',5);    
@@ -69,7 +80,7 @@ function SetupLayout(obj)
     
     
     uix.Empty('Parent',options_layout);
-    options_layout.Heights = [22 120 22 30 22 60 22 -1];
+    options_layout.Heights = [22 120 22 120 22 30 22 60 22 -1];
     
     % Display tab
     display_layout_top = uix.HBox('Parent',h.tab_panel);

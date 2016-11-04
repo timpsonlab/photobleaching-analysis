@@ -53,6 +53,9 @@ classdef Junction < handle
         function d = ShortestDistanceToPosition(obj,p)
             d = abs(obj.positions - p);
             d = min(d);
+            if isempty(d)
+                d = inf;
+            end
         end
 
         function UpdateLine(obj)

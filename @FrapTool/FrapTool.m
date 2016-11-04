@@ -155,7 +155,7 @@ classdef FrapTool < handle
                         
         end
         
-        function recovery = GetRecovery(obj,opt)
+        function [recovery, t] = GetRecovery(obj,opt)
             d = obj.data;
 
             roi = d.roi.x + 1i * d.roi.y;
@@ -175,6 +175,8 @@ classdef FrapTool < handle
             
             recovery = [initial; recovery];
             recovery = recovery / initial_intensity;
+            
+            t = (0:length(recovery_untracked)-1)' * d.dt;
             
         end
 
@@ -272,10 +274,10 @@ classdef FrapTool < handle
             end
             
             recovery_untracked = GetRecovery(obj);
-            recovery_tracked = GetRecovery(obj,'stable');
+            [recovery_tracked,t] = GetRecovery(obj,'stable');
 
             dat = table();
-            dat.T = (0:length(recovery_untracked)-1)';
+            dat.T = t;
             dat.Tracked = recovery_tracked;
             dat.Untracked = recovery_untracked;
             

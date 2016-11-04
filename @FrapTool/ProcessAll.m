@@ -1,6 +1,6 @@
 function ProcessAll(obj)
 
-    [file, folder] = uiputfile('*.xls','Choose File Name',[obj.last_folder filesep 'recovery.xls']);
+    [file, folder] = uiputfile('*.csv','Choose File Name',[obj.last_folder filesep 'recovery.csv']);
     
     if file == 0
         return
@@ -8,14 +8,18 @@ function ProcessAll(obj)
     
     file = [folder file];
 
-    rec = GetRecovery(obj);
-    T = (0:length(rec)-1)';
-
+    [path,name,ext] = fileparts(file);
+    
+    untracked_file = [path name '_untracked' ext];
+    tracked_file = [path name '_tracked' ext];
+    
+    [~,t] = GetRecovery(obj);
+    
     dat_tracked = table();
     dat_untracked = table();
 
-    dat_tracked.T = T;
-    dat_untracked.T = T;
+    dat_tracked.T = t;
+    dat_untracked.T = t;
     
     h = waitbar(0,'Processing...');
     
@@ -24,8 +28,10 @@ function ProcessAll(obj)
         obj.SwitchDataset(i);
         
         recovery_untracked = GetRecovery(obj);
-        recovery_tracked = GetRecovery(obj,'stable');
+        [recovery_tracked,ti] = GetRecovery(obj,'stable');
 
+        assert(length(ti) == length(t) && all(ti==t),'All files must have the same time points!');
+        
         dat_tracked.(obj.data.name) = recovery_tracked;
         dat_untracked.(obj.data.name) = recovery_untracked;            
         
@@ -35,8 +41,7 @@ function ProcessAll(obj)
 
     delete(h);
     
-    writetable(dat_tracked,file,'Sheet','Tracked');
-    writetable(dat_untracked,file,'Sheet','Untracked');
-    DeleteDefaultExcelSheets(file);
+    writetable(dat_tracked,tracked_file);
+    writetable(dat_untracked,untracked_file);
 
 end

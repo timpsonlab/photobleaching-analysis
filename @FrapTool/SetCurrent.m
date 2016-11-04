@@ -2,12 +2,16 @@
 
 function SetCurrent(obj)
 
-    n = length(obj.data.after);
+    d = obj.data;
+
+    obj.handles.dt_edit.String = num2str(d.dt);
+    obj.handles.pixel_size_edit.String = num2str(d.px_per_unit);
+
+    n = length(d.after);
     obj.handles.image_scroll.Max = n;
     obj.handles.image_scroll.Value = 1;
     obj.handles.image_scroll.SliderStep = [1/n 1/n];
 
-    d = obj.data;
 
     ax = [obj.handles.image_ax];
     image_h = {'image'};
