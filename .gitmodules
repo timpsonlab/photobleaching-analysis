@@ -1,0 +1,3 @@
+[submodule "matlab-ui-common"]
+	path = matlab-ui-common
+	url = https://github.com/flimfit/matlab-ui-common
