@@ -1,5 +1,3 @@
-
-
 function SetCurrent(obj)
 
     d = obj.data;
@@ -12,36 +10,40 @@ function SetCurrent(obj)
     obj.handles.image_scroll.Value = 1;
     obj.handles.image_scroll.SliderStep = [1/n 1/n];
 
+    ax = obj.handles.image_ax;
 
-    ax = [obj.handles.image_ax];
-    image_h = {'image'};
-    roi_h = {'image_frap_roi'};
+    cla(ax);
+    obj.handles.image = imagesc(d.after{1},'Parent',ax,'HitTest','on');
+    set(ax,'XTick',[],'YTick',[]);
+    daspect(ax,[1 1 1]);
 
-    [roi_x,roi_y] = GetCoordsFromRoi(d.roi);
-    for i=1:length(ax)
-        cla(ax(i));
-        obj.handles.(image_h{i}) = imagesc(d.after{1},'Parent',ax(i));
-        set(ax(i),'XTick',[],'YTick',[]);
-        daspect(ax(i),[1 1 1]);
-
-        hold(ax(i),'on');
-        obj.handles.(roi_h{i}) = plot(ax(i), roi_x, roi_y, 'g', 'HitTest', 'off');
+    if size(obj.data.roi) >= 1
+        obj.selected_roi = 1;
+    else
+        obj.selected_roi = 0;
     end
-
-    obj.handles.display_tracked_roi = plot(obj.handles.image_ax, roi_x, roi_y, 'r', 'HitTest', 'off');
+    
+    hold(ax,'on');
+    obj.handles.display_frap_roi = plot(ax, nan, nan, 'b', 'HitTest', 'off');
+    obj.handles.display_tracked_roi = plot(ax, nan, nan, 'r', 'HitTest', 'off');
+    obj.handles.selected_tracked_roi = plot(ax, nan, nan, 'r', 'HitTest', 'off', 'LineWidth', 2);
+    
 
     z = zeros(size(d.after{1}));
-    obj.handles.mask_image = image(z,'AlphaData',z,'Parent',obj.handles.image_ax);
+    obj.handles.mask_image = image(z,'AlphaData',z,'Parent',ax,'HitTest','off');
 
 
     % Get centre of roi and stabalise using optical flow
-    roi = d.roi.x + 1i * d.roi.y;
-    p = mean(roi);
-    obj.tracked_roi_centre = TrackJunction(obj.data.flow,p) - p;
-
+    for i=1:length(d.roi)
+        d.roi(i) = d.roi(i).Track(obj.data.flow);
+    end
+    obj.data.roi = d.roi;
 
     obj.UpdateDisplay();
     obj.UpdateRecoveryCurves();
-   
 
+    obj.handles.mask_image.ButtonDownFcn = @(~,~) obj.DisplayMouseDown;
+    obj.handles.mask_image.HitTest = 'on';
+
+    
 end

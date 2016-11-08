@@ -40,13 +40,15 @@ function SetupLayout(obj)
 
     uicontrol('Style','text','String','Data','FontWeight','bold','Parent',options_layout);
     grid = uix.Grid('Parent',options_layout,'Spacing',5);    
-    uicontrol('Style','text','String','Time Step (s)','Parent',grid,'Enable','inactive');
+    uicontrol('Style','text','String','Channel','Parent',grid);
+    uicontrol('Style','text','String','Time Step (s)','Parent',grid);
     uicontrol('Style','text','String','Pixel Size (um)','Parent',grid,'Enable','inactive');
-    h.dt_edit = uicontrol('Style','edit','String','1','Parent',grid);
-    h.pixel_size_edit = uicontrol('Style','edit','String','1','Parent',grid);
+    h.channel_popup = uicontrol('Style','popupmenu','String',{'1'},'Parent',grid);
+    h.dt_edit = uicontrol('Style','edit','String','1','Parent',grid,'Enable','inactive');
+    h.pixel_size_edit = uicontrol('Style','edit','String','1','Parent',grid,'Enable','inactive');
 
     grid.Widths = [100 -1];
-    grid.Heights = [22 22];
+    grid.Heights = [22 22 22];
 
     
     uicontrol('Style','text','String','Motion Compensation','FontWeight','bold','Parent',options_layout);
@@ -83,24 +85,24 @@ function SetupLayout(obj)
     options_layout.Heights = [22 120 22 120 22 30 22 60 22 -1];
     
     % Display tab
-    display_layout_top = uix.HBox('Parent',h.tab_panel);
+    display_layout_top = uix.HBox('Parent',h.tab_panel,'Spacing',5);
     
     display_layout = uix.VBox('Parent',display_layout_top);
     h.image_ax = axes('Parent',display_layout);
     h.image = imagesc(0,'Parent',h.image_ax);
-    h.display_frap_roi = plot(h.image_ax,nan,nan,'r');
-    h.display_tracked_roi = plot(h.image_ax,nan,nan,'r');
 
     h.image_scroll = uicontrol('Style','slider','Min',1,'Max',100,...
                                'Value',1,'SliderStep',[1 1],'Parent',display_layout,...
                                'Callback',@(~,~) obj.UpdateDisplay);
 
-    h.recovery_ax = axes('Parent',display_layout_top);
+    recovery_layout = uix.VBox('Parent',display_layout_top);
+    h.recovery_ax = axes('Parent',recovery_layout);
+    h.recovery_popup = uicontrol('Style','popupmenu','String',{'All Tracked','All Untracked'},'Parent',recovery_layout);
 
-                           
+    recovery_layout.Heights = [-1 22]; 
     display_layout.Heights = [-1 22];                      
-    display_layout_top.Widths = [-1 -1];                      
-    
+    display_layout_top.Widths = [-1 -1];       
+        
     % Drawing tab
     obj.junction_artist = JunctionArtist(h.tab_panel);
     
@@ -121,6 +123,14 @@ function SetupLayout(obj)
         
     layout.Widths = [200 -1 200];
  
+    
+    load(['matlab-ui-common' filesep 'icons.mat']); 
+    h.toolbar = uitoolbar(obj.fh);
+    h.tool_roi_rect_toggle = uitoggletool(h.toolbar,'CData',rect_icon);
+    h.tool_roi_poly_toggle = uitoggletool(h.toolbar,'CData',poly_icon);
+    h.tool_roi_circle_toggle = uitoggletool(h.toolbar,'CData',ellipse_icon);
+    
+    
     obj.handles = h;
     
 end

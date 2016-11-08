@@ -5,7 +5,6 @@ classdef FrapDataReader
      reader;
      meta; 
      
-     
      groups;
   end
   
@@ -96,11 +95,7 @@ classdef FrapDataReader
         
         s = matching_id(1);
         
-        px_size = obj.meta.getPixelsPhysicalSizeX(s);
-        
-        p0 = obj.reader.getIndex(0,channel-1,0);
-        p1 = obj.reader.getIndex(0,channel-1,1);
-        
+        px_size = obj.meta.getPixelsPhysicalSizeX(s);        
         dt = obj.meta.getPixelsTimeIncrement(s);
         
         if isempty(dt)
@@ -130,8 +125,8 @@ classdef FrapDataReader
             roi_ref = char(obj.meta.getImageROIRef(series,j-1));
             roi_id = strrep(roi_ref,'ROI:','');
             roi_id = str2double(roi_id);
-
-            roi(j).label = roi_ref;
+            
+            roi = Roi();
             
             n_shape = obj.meta.getShapeCount(roi_id);
             for i=1:n_shape
@@ -144,8 +139,8 @@ classdef FrapDataReader
                         points = char(obj.meta.getPolygonPoints(roi_id,i-1));
                         points = cellfun(@str2num,strsplit(points,' ')','UniformOutput',false);
                         points = cell2mat(points);
-                        roi(j).x = points(:,1);
-                        roi(j).y = points(:,2);
+                        
+                        roi(j) = Roi(points(:,1), points(:,2));
 
                     case 'Ellipse'
                         
@@ -154,14 +149,13 @@ classdef FrapDataReader
                     case 'Rectangle'
                         
                         % TODO
-                     
-                    case 'Label'
-                        
-                        roi(j).label = char(obj.meta.getLabelText(roi_id,i-1));
-                        
+                                             
                 end
 
             end
+            
+            roi(j).label = roi_ref;
+          
         end
         
     end

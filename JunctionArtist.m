@@ -72,7 +72,7 @@ classdef JunctionArtist < handle
 
             hold(ax,'on');
             
-            [roi_x,roi_y] = GetCoordsFromRoi(roi);
+            [roi_x,roi_y] = roi.GetCoordsForPlot();
             obj.handles.roi_h = plot(ax, roi_x, roi_y, 'g', 'HitTest', 'off');
             
             obj.handles.image.ButtonDownFcn = @(~,~) obj.MouseDown;

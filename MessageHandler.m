@@ -37,10 +37,12 @@ classdef (Sealed) MessageHandler < handle
         function addListener(group, control)
             g = MessageHandler.get(group);
             addlistener(g,'NewMessage',@update);
-            
+                        
             function update(~,~)
-                set(control,'String',g.last_message)
-                drawnow;
+                if isvalid(control)
+                    set(control,'String',g.last_message)
+                    drawnow;
+                end
             end
             
         end
