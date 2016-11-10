@@ -1,7 +1,7 @@
-function [recovery,initial,complete] = ExtractRecovery(before, after, roi, p)
+function [recovery,initial] = ExtractRecovery(images, n_initial, roi, p)
 
     if nargin < 4
-        p = 0;
+        p = [];
     end
 
     roi_x = real(roi);
@@ -10,39 +10,33 @@ function [recovery,initial,complete] = ExtractRecovery(before, after, roi, p)
     px = real(p);
     py = imag(p);
     
-    sz = size(after{1});
+    sz = size(images{1});
     [X,Y] = meshgrid(1:sz(2),1:sz(1));
-    
-    % Compute initial intensity
-    mask = inpolygon(X,Y,roi_x+px(1),roi_y+py(1));
-    initial = zeros(size(before));
-    for j=1:length(before)
-        initial(j) = ExtractPoly(before{j},px(1),py(1));
-    end
+    mask1 = inpoly([X(:),Y(:)],[roi_x,roi_y]);
         
-    recovery = zeros(size(before));
-    for j=1:length(after)
-        if j <= length(p)
-            ju = length(p);
-        end
-        recovery(j) = ExtractPoly(after{j},px(ju),py(ju));
-    end
+    recovery = zeros(size(images));
+    for j=1:length(images)
         
-    complete = [initial; recovery];
-   
-    function v = ExtractPoly(im,px,py)
-        
-        rx = roi_x+px;
-        ry = roi_y+py;
-        
-        sel = (X >= min(floor(rx))) & ...
-              (X <= max(ceil(rx)))  & ...
-              (Y >= min(floor(ry))) & ...
-              (Y <= max(ceil(ry)));
+        if ~isempty(p)
+            rx = roi_x+px(j);
+            ry = roi_y+py(j);
 
-        mask = inpoly([X(sel),Y(sel)],[rx,ry]);
-        im = im(sel);
-        v = sum(im(mask));
+            sel = (X >= min(floor(rx))) & ...
+                  (X <= max(ceil(rx)))  & ...
+                  (Y >= min(floor(ry))) & ...
+                  (Y <= max(ceil(ry)));
+
+            mask = inpoly([X(sel),Y(sel)],[rx,ry]);
+            im = images{j}(sel);
+            v = sum(im(mask));
+        else
+            v = sum(images{j}(mask1));
+        end
+        
+        recovery(j) = v;
     end
+        
+    initial = recovery(1:n_initial);
+    recovery = recovery / mean(initial);
     
 end

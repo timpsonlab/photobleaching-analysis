@@ -87,20 +87,47 @@ function SetupLayout(obj)
     % Display tab
     display_layout_top = uix.HBox('Parent',h.tab_panel,'Spacing',5);
     
-    display_layout = uix.VBox('Parent',display_layout_top);
+    display_layout = uix.VBox('Parent',display_layout_top,'Spacing',5,'Padding',5);
+    
+    display_buttons_layout = uix.HBox('Parent',display_layout);
+    
+    load(['matlab-ui-common' filesep 'icons.mat']); 
+    h.tool_roi_rect_toggle = uicontrol('Style','togglebutton','CData',rect_icon,...
+                              'Parent',display_buttons_layout);
+    h.tool_roi_circle_toggle = uicontrol('Style','togglebutton','CData',ellipse_icon,...
+                              'Parent',display_buttons_layout);
+    h.tool_roi_poly_toggle = uicontrol('Style','togglebutton','CData',poly_icon,...
+                              'Parent',display_buttons_layout);
+    
+    uicontrol('Style','text','String','Selected ROI: ','HorizontalAlignment','right','Parent',display_buttons_layout);
+    h.roi_name_edit = uicontrol('Style','edit','String','ROI #1',...
+                              'Parent',display_buttons_layout);
+    h.roi_type_popup = uicontrol('Style','popupmenu','String',{'Recovery','Photobleaching Control'},...
+                              'Parent',display_buttons_layout);
+    h.delete_roi_button = uicontrol('Style','pushbutton','String','Delete',...
+                              'Parent',display_buttons_layout);
+    
+    uix.Empty('Parent',display_buttons_layout);
+    
+    display_buttons_layout.Widths = [30 30 30 80 150 150 100 -1];
+
+    
+    
     h.image_ax = axes('Parent',display_layout);
     h.image = imagesc(0,'Parent',h.image_ax);
 
+    scroll_layout = uix.HBox('Parent',display_layout);
+    h.scroll_text = uicontrol('Style','text','String','t = 0s','Parent',scroll_layout);
     h.image_scroll = uicontrol('Style','slider','Min',1,'Max',100,...
-                               'Value',1,'SliderStep',[1 1],'Parent',display_layout,...
+                               'Value',1,'SliderStep',[1 1],'Parent',scroll_layout,...
                                'Callback',@(~,~) obj.UpdateDisplay);
+    scroll_layout.Widths = [75 -1];
 
     recovery_layout = uix.VBox('Parent',display_layout_top);
     h.recovery_ax = axes('Parent',recovery_layout);
-    h.recovery_popup = uicontrol('Style','popupmenu','String',{'All Tracked','All Untracked'},'Parent',recovery_layout);
 
-    recovery_layout.Heights = [-1 22]; 
-    display_layout.Heights = [-1 22];                      
+    recovery_layout.Heights = [-1]; 
+    display_layout.Heights = [22 -1 22];                      
     display_layout_top.Widths = [-1 -1];       
         
     % Drawing tab
@@ -115,21 +142,12 @@ function SetupLayout(obj)
     h.od_glcm_ax = axes('Parent',kymograph_layout);
     
     kymograph_layout.Heights = [22 -2 -1];
-    
-    
-    
+        
     h.tab_panel.TabTitles = {'Display', 'Junctions', 'Kymographs'};
     h.tab_panel.TabWidth = 90;
         
     layout.Widths = [200 -1 200];
- 
-    
-    load(['matlab-ui-common' filesep 'icons.mat']); 
-    h.toolbar = uitoolbar(obj.fh);
-    h.tool_roi_rect_toggle = uitoggletool(h.toolbar,'CData',rect_icon);
-    h.tool_roi_poly_toggle = uitoggletool(h.toolbar,'CData',poly_icon);
-    h.tool_roi_circle_toggle = uitoggletool(h.toolbar,'CData',ellipse_icon);
-    
+     
     
     obj.handles = h;
     

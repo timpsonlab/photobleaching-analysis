@@ -5,7 +5,7 @@ function SetCurrent(obj)
     obj.handles.dt_edit.String = num2str(d.dt);
     obj.handles.pixel_size_edit.String = num2str(d.px_per_unit);
 
-    n = length(d.after);
+    n = length(d.images);
     obj.handles.image_scroll.Max = n;
     obj.handles.image_scroll.Value = 1;
     obj.handles.image_scroll.SliderStep = [1/n 1/n];
@@ -13,31 +13,32 @@ function SetCurrent(obj)
     ax = obj.handles.image_ax;
 
     cla(ax);
-    obj.handles.image = imagesc(d.after{1},'Parent',ax,'HitTest','on');
+    obj.handles.image = imagesc(d.images{1},'Parent',ax,'HitTest','on');
     set(ax,'XTick',[],'YTick',[]);
     daspect(ax,[1 1 1]);
-
-    if size(obj.data.roi) >= 1
-        obj.selected_roi = 1;
-    else
-        obj.selected_roi = 0;
-    end
     
     hold(ax,'on');
     obj.handles.display_frap_roi = plot(ax, nan, nan, 'b', 'HitTest', 'off');
     obj.handles.display_tracked_roi = plot(ax, nan, nan, 'r', 'HitTest', 'off');
     obj.handles.selected_tracked_roi = plot(ax, nan, nan, 'r', 'HitTest', 'off', 'LineWidth', 2);
-    
+    obj.handles.pb_roi =  plot(ax, nan, nan, 'g', 'HitTest', 'off', 'LineWidth', 1);
 
-    z = zeros(size(d.after{1}));
+    z = zeros(size(d.images{1}));
     obj.handles.mask_image = image(z,'AlphaData',z,'Parent',ax,'HitTest','off');
 
 
     % Get centre of roi and stabalise using optical flow
-    for i=1:length(d.roi)
-        d.roi(i) = d.roi(i).Track(obj.data.flow);
+    for i=1:length(obj.data.roi)
+        obj.data.roi(i) = obj.data.roi(i).Compute(obj.data);
     end
-    obj.data.roi = d.roi;
+    
+    if size(obj.data.roi) >= 1
+        sel_roi = 1;
+    else
+        sel_roi = [];
+    end
+    
+    obj.SetRoiSelection(sel_roi);
 
     obj.UpdateDisplay();
     obj.UpdateRecoveryCurves();

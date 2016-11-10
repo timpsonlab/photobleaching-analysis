@@ -57,9 +57,9 @@ classdef FrapDataReader
         obj.reader.close();
     end
     
-    function n_channel = GetNumChannel(obj,g)
+    function n_channel = GetNumChannels(obj,g)
         matching_id = find(strcmp(obj.group,g),1) - 1;
-        n_channel = double(omeMeta.getChannelCount(matching_id));
+        n_channel = double(obj.meta.getChannelCount(matching_id));
     end
     
     function frap = GetGroup(obj,g,channel)
@@ -106,12 +106,12 @@ classdef FrapDataReader
             end
         end
         
-        frap.before = im{1};
-        frap.after = im{2}; 
+        frap.images = [im{1}; im{2}];
         frap.px_per_unit = double(px_size.value);
         frap.length_unit = char(px_size.unit.getSymbol);
         frap.dt = dt;
         frap.name = obj.group{s+1};
+        frap.n_prebleach_frames = length(im{1});
         
         frap.roi = obj.GetROI(s);
         
@@ -155,6 +155,7 @@ classdef FrapDataReader
             end
             
             roi(j).label = roi_ref;
+            roi(j).type = 'Recovery';
           
         end
         

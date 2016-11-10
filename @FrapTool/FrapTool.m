@@ -53,14 +53,46 @@ classdef FrapTool < handle
             roi = obj.roi_handler.roi;
             
             if ~isempty(roi) && isa(roi,'Roi')
-                roi = roi.Track(obj.data.flow);
+                roi = roi.Compute(obj.data);
+                roi.type = obj.handles.roi_type_popup.String{obj.handles.roi_type_popup.Value};
                 obj.data.roi(end+1) = roi;
                 obj.selected_roi = length(obj.data.roi);
+            
             end
             
             obj.UpdateRecoveryCurves();
             obj.UpdateDisplay();
             
+        end
+        
+        function DeleteRoi(obj)
+           
+            obj.data.roi(obj.selected_roi) = [];
+            
+            if isempty(obj.data.roi)
+                obj.selected_roi = [];
+            elseif obj.selected_roi > length(obj.data.roi)
+                obj.selected_roi = length(obj.data.roi);
+            end
+            
+            obj.UpdateDisplay();
+            
+        end
+        
+        function ChangeRoiType(obj,src,~)
+            if ~isempty(obj.selected_roi)
+               obj.data.roi(obj.selected_roi).type = src.String{src.Value}; 
+            end
+            
+            obj.UpdateDisplay();
+        end
+        
+        function RenameRoi(obj,src,~)
+            if ~isempty(obj.selected_roi)
+               obj.data.roi(obj.selected_roi).label = src.String; 
+            end
+            
+            obj.UpdateDisplay();            
         end
         
         function SetupMenu(obj)
@@ -82,7 +114,9 @@ classdef FrapTool < handle
             h.estimate_photobleaching_button.Callback = @(~,~) obj.EstimatePhotobleaching();
             h.photobleaching_popup.Callback = @(~,~) obj.UpdateRecoveryCurves();
             h.recovery_popup.Callback = @(~,~) obj.UpdateRecoveryCurves();
-
+            h.channel_popup.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
+            h.delete_roi_button.Callback = @(~,~) obj.DeleteRoi();
+            h.roi_type_popup.Callback = @obj.ChangeRoiType;
             obj.roi_handler = RoiHandler(h);
             addlistener(obj.roi_handler,'roi_updated',@(~,~) obj.AddRoi);
         end
@@ -123,13 +157,16 @@ classdef FrapTool < handle
                 warndlg('Please load data first');
                 return;
             end
-                        
-            d = obj.data;
-            idx = obj.selected_roi;
-            p = d.roi(idx).position;
-            [recovery, initial] = ExtractRecovery(d.before, d.after, p); 
-
-            recovery = recovery / mean(initial);
+                     
+            sel = strcmp({obj.data.roi.type},'Photobleaching Control'); 
+            pb_roi = obj.data.roi(sel);
+            recovery = 0;
+            for i=1:length(pb_roi)   
+                ri = pb_roi(i).untracked_recovery;
+                ri = ri / ri(1);
+                recovery = recovery + ri;
+            end
+            recovery = recovery / length(pb_roi);
             
             obj.pb_model = FitExpWithPlateau((0:length(recovery)-1)',double(recovery));
             % = feval(fitmodel,1:length(mean_after));
@@ -142,53 +179,6 @@ classdef FrapTool < handle
             obj.UpdateRecoveryCurves();
         end
         
-        
-        function UpdateDisplay(obj)
-            
-            cur = round(obj.handles.image_scroll.Value);
-
-            image1 = double(obj.data.after{1});
-            
-            cur_image = double(obj.data.after{cur});
-            cur_image =  cur_image / prctile(image1(:),99);
-            out_im = repmat(cur_image,[1 1 3]);
-            out_im(out_im > 1) = 1;
-            
-            mask_im = zeros(size(cur_image));
-            
-            ndil = 4; % TODO
-            
-            cmap = [0 0 0
-                    1 0 0
-                    0 1 0
-                    0 0 1];
-                        
-            jcns = obj.junction_artist.junctions;
-            for i=1:length(jcns)
-                tp = jcns(i).tracked_positions;
-                if ~isempty(tp)
-                    [~,idx] = GetThickLine(size(cur_image),tp(cur,:),600,ndil); 
-                    mask_im(idx) = jcns(i).type;
-                end
-            end
-            
-            obj.handles.image.CData = out_im;
-            
-            obj.handles.mask_image.CData = ind2rgb(mask_im+1,cmap);
-            obj.handles.mask_image.AlphaData = 0.8*(mask_im>0);
-                        
-            [x,y] = obj.data.roi.GetCoordsForPlot(cur);
-            set(obj.handles.display_tracked_roi,'XData',x,'YData',y);
-
-            [x,y] = obj.data.roi.GetCoordsForPlot(1);
-            set(obj.handles.display_frap_roi,'XData',x,'YData',y);
-
-            if ~isempty(obj.selected_roi) && obj.selected_roi <= length(obj.data.roi)
-                [x,y] = obj.data.roi(obj.selected_roi).GetCoordsForPlot(cur);
-                set(obj.handles.selected_tracked_roi,'XData',x,'YData',y);
-            end
-            
-        end
 
         function DisplayMouseDown(obj)
            
@@ -198,8 +188,18 @@ classdef FrapTool < handle
             % get closest ROI
             dist = arrayfun(@(x) min(abs(x.position-p)), obj.data.roi);
             [~,idx] = min(dist);
+            
+            obj.SetRoiSelection(idx);
+        end
+        
+        function SetRoiSelection(obj, idx)
 
             obj.selected_roi = idx;
+
+            type = obj.data.roi(idx).type;
+            p = find(strcmp(obj.handles.roi_type_popup.String,type),1);
+            obj.handles.roi_type_popup.Value = p; 
+            obj.handles.roi_name_edit.String = obj.data.roi(idx).label;
             
             obj.UpdateDisplay();
             obj.UpdateRecoveryCurves();
@@ -209,24 +209,19 @@ classdef FrapTool < handle
         function [recovery, t] = GetRecovery(obj,idx,opt)
             d = obj.data;
             
-            p = d.roi(idx).position;
             if nargin > 2 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
-                [recovery, initial] = ExtractRecovery(d.before, d.after, p, d.roi(idx).tracked_offset); 
+                recovery = d.roi(idx).tracked_recovery;
             else
-                [recovery, initial] = ExtractRecovery(d.before, d.after, p);
+                recovery = d.roi(idx).untracked_recovery;
             end
-
-            initial_intensity = mean(initial);
 
             if ~isempty(obj.pb_model) && obj.handles.photobleaching_popup.Value == 2
                 pb_curve = feval(obj.pb_model,0:length(recovery)-1);
+                pb_curve = pb_curve / pb_curve(1);
                 recovery = recovery ./ pb_curve;
             end
 
-            recovery = [initial; recovery];
-            recovery = recovery / initial_intensity;
-            
             t = (0:size(recovery,1)-1)' * d.dt;
             
         end
@@ -240,13 +235,14 @@ classdef FrapTool < handle
 
             all_recoveries = [];
             
-            for i=1:length(d.roi)
-                recovery = obj.GetRecovery(i,opt);
+            sel = strcmp({d.roi.type},'Recovery');
+            idx = 1:length(d.roi);
+            idx = idx(sel);
+            for i=idx
+                [recovery, t] = obj.GetRecovery(i,opt);
                 all_recoveries = [all_recoveries recovery]; %#ok
             end
-            
-            t = (0:size(recovery,1)-1)' * d.dt;
-            
+                        
         end
 
         function UpdateKymographList(obj)           
@@ -259,12 +255,13 @@ classdef FrapTool < handle
             cla(rec_h);
             
             idx = obj.selected_roi;
-            recovery = [obj.GetRecovery(idx) obj.GetRecovery(idx,'stable')];
+            [recovery1,t] = obj.GetRecovery(idx); 
+            recovery2 = obj.GetRecovery(idx,'stable');
             
             
-            plot(rec_h,recovery);
+            plot(rec_h,t,[recovery1 recovery2]);
             ylim(rec_h,[0 1.2]);
-            xlabel(rec_h,'Time (frames)');
+            xlabel(rec_h,'Time (s)');
             ylabel(rec_h,'Intensity');
 
         end
@@ -274,9 +271,6 @@ classdef FrapTool < handle
             np = 50;
             p = obj.junction_artist.junctions(j).positions;
             t = TrackJunction(obj.data.flow, p, true, np);
-            nb = length(obj.data.before);
-            t = [repmat(t(1,:),[nb 1]); t];
-
             obj.junction_artist.junctions(j).tracked_positions = t;
             
         end
@@ -368,11 +362,9 @@ classdef FrapTool < handle
 
             p = jcn.tracked_positions;
             
-            images = [obj.data.before; obj.data.after];
-
             options.line_width = 9;
 
-            results = ExtractTrackedJunctions(images, {p}, options);
+            results = ExtractTrackedJunctions(obj.data.images, {p}, options);
             [kymograph,r] = GetCorrectedKymograph(results);
 
         end

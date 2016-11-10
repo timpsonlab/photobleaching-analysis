@@ -25,21 +25,26 @@ classdef RoiHandler < handle
             obj.handles = handles;
             h = obj.handles;
             
-            set(h.tool_roi_rect_toggle,'State','off');
-            set(h.tool_roi_poly_toggle,'State','off');
-            set(h.tool_roi_circle_toggle,'State','off');
+            set(h.tool_roi_rect_toggle,'Value',0);
+            set(h.tool_roi_poly_toggle,'Value',0);
+            set(h.tool_roi_circle_toggle,'Value',0);
                        
-            set(h.tool_roi_rect_toggle,'OnCallback',@obj.on_callback);
-            set(h.tool_roi_rect_toggle,'OffCallback',@obj.off_callback);
-            
-            set(h.tool_roi_poly_toggle,'OnCallback',@obj.on_callback);
-            set(h.tool_roi_poly_toggle,'OffCallback',@obj.off_callback);
-            
-            set(h.tool_roi_circle_toggle,'OnCallback',@obj.on_callback);
-            set(h.tool_roi_circle_toggle,'OffCallback',@obj.off_callback);            
+            set(h.tool_roi_rect_toggle,'Callback',@obj.callback);
+            set(h.tool_roi_poly_toggle,'Callback',@obj.callback);
+            set(h.tool_roi_circle_toggle,'Callback',@obj.callback);            
         end
-                        
-        function on_callback(obj,src,~)
+        
+        function callback(obj,src,~)
+           
+            if src.Value == 1
+                obj.on_callback(src);
+            else
+                obj.off_callback(src);
+            end
+            
+        end
+        
+        function on_callback(obj,src)
             
             if ~obj.waiting
                 
@@ -55,22 +60,22 @@ classdef RoiHandler < handle
                 switch src
                     case h.tool_roi_rect_toggle
 
-                        set(h.tool_roi_poly_toggle,'State','off');
-                        set(h.tool_roi_circle_toggle,'State','off');
+                        set(h.tool_roi_poly_toggle,'Value',0);
+                        set(h.tool_roi_circle_toggle,'Value',0);
 
                         obj.roi_handle = imrect(h.image_ax);
 
                     case h.tool_roi_poly_toggle
 
-                        set(h.tool_roi_rect_toggle,'State','off');
-                        set(h.tool_roi_circle_toggle,'State','off');
+                        set(h.tool_roi_rect_toggle,'Value',0);
+                        set(h.tool_roi_circle_toggle,'Value',0);
 
                         obj.roi_handle = impoly(h.image_ax);
 
                     case h.tool_roi_circle_toggle
 
-                        set(h.tool_roi_poly_toggle,'State','off');
-                        set(h.tool_roi_rect_toggle,'State','off');
+                        set(h.tool_roi_poly_toggle,'Value',0);
+                        set(h.tool_roi_rect_toggle,'Value',0);
 
                         obj.roi_handle = imellipse(h.image_ax);
 
@@ -91,12 +96,12 @@ classdef RoiHandler < handle
                 obj.waiting = false;
             end
             
-            set(src,'State','off');
+            set(src,'Value',0);
 
         end
         
-        function off_callback(obj,~,~)
-           %set(src,'State','off');
+        function off_callback(obj,src)
+           %set(src,'Value',0);
            % if an roi is part complete then use robot framework to fire
            % esc to cancel
            if obj.waiting
@@ -111,10 +116,10 @@ classdef RoiHandler < handle
            end
         end
         
-        function roi_change_callback(obj,~,~)
-            obj.update_mask();
-            notify(obj,'roi_updated');
-        end
+%        function roi_change_callback(obj,~,~)
+%            obj.update_mask();
+%            notify(obj,'roi_updated');
+%        end
 
         function click_callback(obj,src,~)
             
@@ -148,8 +153,8 @@ classdef RoiHandler < handle
                     
                     case 'imellipse'
                         s = linspace(0,2*pi,50);                        
-                        x = 0.5 * pos(4) * sin(s) + pos(1);
-                        y = 0.5 * pos(4) * cos(s) + pos(2);
+                        x = 0.5 * pos(4) * (sin(s)+1) + pos(1);
+                        y = 0.5 * pos(4) * (cos(s)+1) + pos(2);
                         
                     case 'impoly'
                         x = pos(:,1);
@@ -158,7 +163,6 @@ classdef RoiHandler < handle
                 
                 obj.roi = Roi(x,y);
                 obj.roi.label = ['ROI ' roi_class(3:end)];
-                notify(obj,'roi_updated');
                 delete(obj.roi_handle);
             end
         end

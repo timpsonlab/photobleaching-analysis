@@ -3,8 +3,11 @@ classdef Roi
     properties
         position;
         
-        type;
+        type = 'Recovery';
         tracked_offset = 0;
+        
+        untracked_recovery;
+        tracked_recovery;
         
         label = 'ROI';
     end
@@ -52,9 +55,13 @@ classdef Roi
         
         end
         
-        function obj = Track(obj, flow)
+        function obj = Compute(obj, data)
             p = mean(obj.position);
-            obj.tracked_offset = TrackJunction(flow,p) - p;
+            obj.tracked_offset = TrackJunction(data.flow,p) - p;
+           
+            % Get centre of roi and stabalise using optical flow
+            obj.tracked_recovery = ExtractRecovery(data.images, data.n_prebleach_frames, obj.position, obj.tracked_offset); 
+            obj.untracked_recovery = ExtractRecovery(data.images, data.n_prebleach_frames, obj.position);
         end
                 
     end
