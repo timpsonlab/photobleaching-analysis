@@ -26,13 +26,12 @@ classdef FrapTool < handle
    
     
     methods
-        function obj = FrapTool
+        function obj = FrapTool(parent, fig)
 
             addpath('layout');
             GetBioformats();
 
-            obj.SetupLayout();
-            obj.SetupMenu();
+            obj.SetupLayout(parent, fig);
             obj.SetupCallbacks();
                         
             if ispref('FrapTool','last_folder')
@@ -53,7 +52,7 @@ classdef FrapTool < handle
             end
         end
                 
-        function SetupMenu(obj)
+        function menus = SetupMenu(obj)
             file_menu = uimenu(obj.fh,'Label','File');
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
             uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
@@ -63,6 +62,8 @@ classdef FrapTool < handle
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
             uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) obj.TrackJunctions,'Accelerator','T');
+            
+            menus = [file_menu tracking_menu];
         end
         
         function SetupCallbacks(obj)
@@ -320,7 +321,7 @@ classdef FrapTool < handle
                 
             else
                 
-                results = obj.GetCorrectedKymograph(obj.selected_roi);
+                results = obj.GetTrackedJunctionData(obj.selected_roi);
                 recovery = sum(results.l2,1)';
                 
                 [recovery,t] = obj.CorrectRecovery(recovery);
@@ -360,7 +361,7 @@ classdef FrapTool < handle
             junction = obj.handles.kymograph_select.Value;
             [kymograph,r] = GenerateKymograph(obj, junction);
             
-            t = 1:size(kymograph,2);
+            t = (0:size(kymograph,2)-1) * obj.data.dt;
             
             distance_label = ['Distance (' obj.data.length_unit ')'];
             
@@ -368,7 +369,7 @@ classdef FrapTool < handle
             imagesc(t,r,kymograph,'Parent',ax_h);
             ax_h.TickDir = 'out';
             ax_h.Box = 'off';
-            xlabel(ax_h,'Time (frames)');
+            xlabel(ax_h,'Time (s)');
             ylabel(ax_h,distance_label);
             
             lim = 500;
@@ -378,7 +379,7 @@ classdef FrapTool < handle
             contrast = ComputeKymographOD_GLCM(r,kymograph,lim);
             
             h_ax = obj.handles.od_glcm_ax;
-            plot(obj.handles.od_glcm_ax,contrast);
+            plot(obj.handles.od_glcm_ax,contrast,'-o');
             xlabel(h_ax,distance_label);
             ylabel(h_ax,'Contrast');
         end
