@@ -38,7 +38,7 @@ function SetCurrent(obj)
         sel_roi = [];
     end
     
-    obj.SetRoiSelection(sel_roi);
+    obj.SetRoiSelection('roi',sel_roi);
 
     obj.UpdateDisplay();
     obj.UpdateRecoveryCurves();

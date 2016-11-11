@@ -60,8 +60,8 @@ classdef Roi
             obj.tracked_offset = TrackJunction(data.flow,p) - p;
            
             % Get centre of roi and stabalise using optical flow
-            obj.tracked_recovery = ExtractRecovery(data.images, data.n_prebleach_frames, obj.position, obj.tracked_offset); 
-            obj.untracked_recovery = ExtractRecovery(data.images, data.n_prebleach_frames, obj.position);
+            obj.tracked_recovery = ExtractRecovery(data.images, obj.position, obj.tracked_offset); 
+            obj.untracked_recovery = ExtractRecovery(data.images, obj.position);
         end
                 
     end

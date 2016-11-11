@@ -1,4 +1,4 @@
-function [recovery,initial] = ExtractRecovery(images, n_initial, roi, p)
+function [recovery] = ExtractRecovery(images, roi, p)
 
     if nargin < 4
         p = [];
@@ -36,7 +36,7 @@ function [recovery,initial] = ExtractRecovery(images, n_initial, roi, p)
         recovery(j) = v;
     end
         
-    initial = recovery(1:n_initial);
-    recovery = recovery / mean(initial);
+    %initial = recovery(1:n_initial);
+    %recovery = recovery / mean(initial);
     
 end

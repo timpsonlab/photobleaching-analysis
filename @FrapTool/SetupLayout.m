@@ -38,6 +38,7 @@ function SetupLayout(obj)
     options_panel = uipanel(layout,'Title','Options');
     options_layout = uix.VBox('Parent',options_panel,'Spacing',2,'Padding',5);
 
+    %--- Data ---% 
     uicontrol('Style','text','String','Data','FontWeight','bold','Parent',options_layout);
     grid = uix.Grid('Parent',options_layout,'Spacing',5);    
     uicontrol('Style','text','String','Channel','Parent',grid);
@@ -51,6 +52,7 @@ function SetupLayout(obj)
     grid.Heights = [22 22 22];
 
     
+    %--- Motion Compenstation ---% 
     uicontrol('Style','text','String','Motion Compensation','FontWeight','bold','Parent',options_layout);
     grid = uix.Grid('Parent',options_layout,'Spacing',5);    
     uicontrol('Style','text','String','Drift Compensation','Parent',grid);
@@ -66,8 +68,10 @@ function SetupLayout(obj)
     grid.Heights = [22 22 22 22];
     
     h.reload_button = uicontrol('Style','pushbutton','String','Reload','Parent',options_layout);
-
     uix.Empty('Parent',options_layout);    
+
+    
+    %--- Photobleaching Compenstation ---% 
     uicontrol('Style','text','String','Photobleaching Correction','FontWeight','bold','Parent',options_layout);
     grid = uix.Grid('Parent',options_layout,'Spacing',5);    
     uicontrol('Style','text','String','Calibration','Parent',grid);
@@ -79,10 +83,21 @@ function SetupLayout(obj)
     grid.Heights = [18 22];
     
     h.estimate_photobleaching_button = uicontrol('Style','pushbutton','String','Estimate Photobleaching','Parent',options_layout);
+    uix.Empty('Parent',options_layout);    
+    
+
+    %--- Junctions ---% 
+    uicontrol('Style','text','String','Junctions','FontWeight','bold','Parent',options_layout);
+    grid = uix.Grid('Parent',options_layout,'Spacing',5);    
+    uicontrol('Style','text','String','Width (px)','Parent',grid);
+    h.junction_width = uicontrol('Style','edit','String','9','Parent',grid);
+
+    grid.Widths = [100 -1];
+    grid.Heights = [22];
     
     
     uix.Empty('Parent',options_layout);
-    options_layout.Heights = [22 120 22 120 22 30 22 60 22 -1];
+    options_layout.Heights = [22 120 22 120 22 30 22 60 22 30 22 60 -1];
     
     % Display tab
     display_layout_top = uix.HBox('Parent',h.tab_panel,'Spacing',5);
@@ -100,7 +115,7 @@ function SetupLayout(obj)
                               'Parent',display_buttons_layout);
     
     uicontrol('Style','text','String','Selected ROI: ','HorizontalAlignment','right','Parent',display_buttons_layout);
-    h.roi_name_edit = uicontrol('Style','edit','String','ROI #1',...
+    h.roi_name_edit = uicontrol('Style','edit','String','','Enable','off',...
                               'Parent',display_buttons_layout);
     h.roi_type_popup = uicontrol('Style','popupmenu','String',{'Recovery','Photobleaching Control'},...
                               'Parent',display_buttons_layout);

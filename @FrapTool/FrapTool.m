@@ -5,7 +5,11 @@ classdef FrapTool < handle
         handles;
         
         roi_handler;
+        
+        selection_type;
         selected_roi;
+        selected_junction;
+        
         reader;
         
         datasets;
@@ -48,53 +52,7 @@ classdef FrapTool < handle
                 setpref('FrapTool','last_folder',value);
             end
         end
-        
-        function AddRoi(obj)
-            roi = obj.roi_handler.roi;
-            
-            if ~isempty(roi) && isa(roi,'Roi')
-                roi = roi.Compute(obj.data);
-                roi.type = obj.handles.roi_type_popup.String{obj.handles.roi_type_popup.Value};
-                obj.data.roi(end+1) = roi;
-                obj.selected_roi = length(obj.data.roi);
-            
-            end
-            
-            obj.UpdateRecoveryCurves();
-            obj.UpdateDisplay();
-            
-        end
-        
-        function DeleteRoi(obj)
-           
-            obj.data.roi(obj.selected_roi) = [];
-            
-            if isempty(obj.data.roi)
-                obj.selected_roi = [];
-            elseif obj.selected_roi > length(obj.data.roi)
-                obj.selected_roi = length(obj.data.roi);
-            end
-            
-            obj.UpdateDisplay();
-            
-        end
-        
-        function ChangeRoiType(obj,src,~)
-            if ~isempty(obj.selected_roi)
-               obj.data.roi(obj.selected_roi).type = src.String{src.Value}; 
-            end
-            
-            obj.UpdateDisplay();
-        end
-        
-        function RenameRoi(obj,src,~)
-            if ~isempty(obj.selected_roi)
-               obj.data.roi(obj.selected_roi).label = src.String; 
-            end
-            
-            obj.UpdateDisplay();            
-        end
-        
+                
         function SetupMenu(obj)
             file_menu = uimenu(obj.fh,'Label','File');
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
@@ -154,12 +112,19 @@ classdef FrapTool < handle
         function EstimatePhotobleaching(obj)
            
             if isempty(obj.data)
-                warndlg('Please load data first');
+                warndlg('Please load data first','Could not estimate photobleaching');
                 return;
             end
-                     
+            
             sel = strcmp({obj.data.roi.type},'Photobleaching Control'); 
             pb_roi = obj.data.roi(sel);
+            
+            if isempty(pb_roi)
+                warndlg('Please set some ROIs to "Photobleaching Control" regions first','Could not estimate photobleaching');
+                return;
+            end
+
+            
             recovery = 0;
             for i=1:length(pb_roi)   
                 ri = pb_roi(i).untracked_recovery;
@@ -167,7 +132,7 @@ classdef FrapTool < handle
                 recovery = recovery + ri;
             end
             recovery = recovery / length(pb_roi);
-            
+
             obj.pb_model = FitExpWithPlateau((0:length(recovery)-1)',double(recovery));
             % = feval(fitmodel,1:length(mean_after));
 
@@ -182,29 +147,106 @@ classdef FrapTool < handle
 
         function DisplayMouseDown(obj)
            
+            % Get click position
             pt = get(obj.handles.image_ax, 'CurrentPoint');
             p = pt(1,1) + 1i * pt(1,2);
             
             % get closest ROI
             dist = arrayfun(@(x) min(abs(x.position-p)), obj.data.roi);
-            [~,idx] = min(dist);
+            [roi_dist,roi_idx] = min(dist);
             
-            obj.SetRoiSelection(idx);
+            % get closest junction
+            dist = arrayfun(@(x) min(abs(x.positions-p)), obj.junction_artist.junctions);
+            [junction_dist,junction_idx] = min(dist);
+            
+            if isempty(roi_dist) 
+                obj.SetRoiSelection('roi',roi_idx);
+            elseif isempty(junction_dist)
+                obj.SetRoiSelection('junction',junction_idx);
+            elseif roi_dist < junction_dist 
+                obj.SetRoiSelection('roi',roi_idx);
+            else
+                obj.SetRoiSelection('junction',junction_idx);
+            end
+        end
+   
+%=== ROI handling ===% 
+        
+        function AddRoi(obj)
+            roi = obj.roi_handler.roi;
+            
+            if ~isempty(roi) && isa(roi,'Roi')
+                roi = roi.Compute(obj.data);
+                roi.type = obj.handles.roi_type_popup.String{obj.handles.roi_type_popup.Value};
+                obj.data.roi(end+1) = roi;
+                
+                obj.SetRoiSelection('roi',length(obj.data.roi));
+            end
+            
+            obj.UpdateRecoveryCurves();
+            obj.UpdateDisplay();
+            
         end
         
-        function SetRoiSelection(obj, idx)
+        function DeleteRoi(obj)
+           
+            obj.data.roi(obj.selected_roi) = [];
+            
+            if isempty(obj.data.roi)
+                obj.selected_roi = [];
+            elseif obj.selected_roi > length(obj.data.roi)
+                obj.selected_roi = length(obj.data.roi);
+            end
+            
+            obj.UpdateDisplay();
+            
+        end
+        
+        function ChangeRoiType(obj,src,~)
+            if ~isempty(obj.selected_roi)
+               obj.data.roi(obj.selected_roi).type = src.String{src.Value}; 
+            end
+            
+            obj.UpdateDisplay();
+        end
+        
+        function RenameRoi(obj,src,~)
+            if ~isempty(obj.selected_roi)
+               obj.data.roi(obj.selected_roi).label = src.String; 
+            end
+            
+            obj.UpdateDisplay();            
+        end
+        
+        function SetRoiSelection(obj, type, idx)
 
+            obj.selection_type = type;
             obj.selected_roi = idx;
 
-            type = obj.data.roi(idx).type;
-            p = find(strcmp(obj.handles.roi_type_popup.String,type),1);
-            obj.handles.roi_type_popup.Value = p; 
-            obj.handles.roi_name_edit.String = obj.data.roi(idx).label;
+            if strcmp(type,'roi')
+            
+                type = obj.data.roi(idx).type;
+                p = find(strcmp(obj.handles.roi_type_popup.String,type),1);
+                obj.handles.roi_type_popup.Value = p; 
+                obj.handles.roi_name_edit.String = obj.data.roi(idx).label;
+                obj.handles.roi_name_edit.Enable = 'on';
+                obj.handles.delete_roi_button.Enable = 'on';
+                obj.handles.roi_type_popup.Enable = 'on';
+            else
+               
+                obj.handles.roi_name_edit.String = '';
+                obj.handles.roi_name_edit.Enable = 'off';
+                obj.handles.delete_roi_button.Enable = 'off';
+                obj.handles.roi_type_popup.Enable = 'off';
+                
+            end
             
             obj.UpdateDisplay();
             obj.UpdateRecoveryCurves();
             
         end
+        
+%=== Recovery/Kymograph processing ===% 
         
         function [recovery, t] = GetRecovery(obj,idx,opt)
             d = obj.data;
@@ -216,13 +258,25 @@ classdef FrapTool < handle
                 recovery = d.roi(idx).untracked_recovery;
             end
 
+            [recovery,t] = obj.CorrectRecovery(recovery);
+            
+            
+        end
+        
+        function [corrected,t] = CorrectRecovery(obj,recovery)
+                        
             if ~isempty(obj.pb_model) && obj.handles.photobleaching_popup.Value == 2
                 pb_curve = feval(obj.pb_model,0:length(recovery)-1);
                 pb_curve = pb_curve / pb_curve(1);
-                recovery = recovery ./ pb_curve;
+                corrected = recovery ./ pb_curve;
+            else
+                corrected = recovery;
             end
+            
+                initial = mean(corrected(1:obj.data.n_prebleach_frames));
+            corrected = corrected / initial;
 
-            t = (0:size(recovery,1)-1)' * d.dt;
+            t = (0:size(recovery,1)-1)' * obj.data.dt;
             
         end
         
@@ -254,12 +308,22 @@ classdef FrapTool < handle
             rec_h = obj.handles.recovery_ax;
             cla(rec_h);
             
-            idx = obj.selected_roi;
-            [recovery1,t] = obj.GetRecovery(idx); 
-            recovery2 = obj.GetRecovery(idx,'stable');
+            if strcmp(obj.selection_type,'roi')
+                
+                [recovery1,t] = obj.GetRecovery(obj.selected_roi); 
+                recovery2 = obj.GetRecovery(obj.selected_roi,'stable');
+                recovery = [recovery1 recovery2];
+                
+            else
+                
+                results = obj.GetTrackedJunctionData(obj.selected_roi);
+                recovery = sum(results.l2,1)';
+                
+                [recovery,t] = obj.CorrectRecovery(recovery);
+                                
+            end
             
-            
-            plot(rec_h,t,[recovery1 recovery2]);
+            plot(rec_h,t,recovery);
             ylim(rec_h,[0 1.2]);
             xlabel(rec_h,'Time (s)');
             ylabel(rec_h,'Intensity');
@@ -354,6 +418,13 @@ classdef FrapTool < handle
         
         function [kymograph,r] = GenerateKymograph(obj, j)
             
+            results = obj.GetTrackedJunctionData(obj, j);
+            [kymograph,r] = GetCorrectedKymograph(results);
+
+        end
+        
+        function results = GetTrackedJunctionData(obj, j)
+            
             jcn = obj.junction_artist.junctions(j);
             
             if ~jcn.IsTracked()
@@ -365,8 +436,7 @@ classdef FrapTool < handle
             options.line_width = 9;
 
             results = ExtractTrackedJunctions(obj.data.images, {p}, options);
-            [kymograph,r] = GetCorrectedKymograph(results);
-
+            
         end
         
     end
