@@ -232,6 +232,7 @@ classdef FrapTool < handle
                 obj.handles.roi_name_edit.Enable = 'on';
                 obj.handles.delete_roi_button.Enable = 'on';
                 obj.handles.roi_type_popup.Enable = 'on';
+                
             else
                
                 obj.handles.roi_name_edit.String = '';
@@ -263,21 +264,24 @@ classdef FrapTool < handle
             
         end
         
-        function [corrected,t] = CorrectRecovery(obj,recovery)
-                        
+        function pb_curve = GetPhotobleachingCorrection(obj)
             if ~isempty(obj.pb_model) && obj.handles.photobleaching_popup.Value == 2
-                pb_curve = feval(obj.pb_model,0:length(recovery)-1);
+                pb_curve = feval(obj.pb_model,0:length(obj.data.images)-1);
                 pb_curve = pb_curve / pb_curve(1);
-                corrected = recovery ./ pb_curve;
             else
-                corrected = recovery;
-            end
+                pb_curve = ones(length(obj.data.images),1);
+            end           
+        end
+        
+        function [corrected,t] = CorrectRecovery(obj,recovery)
+                     
+            pb_curve = obj.GetPhotobleachingCorrection();
+            corrected = recovery ./ pb_curve;
             
-                initial = mean(corrected(1:obj.data.n_prebleach_frames));
+            initial = mean(corrected(1:obj.data.n_prebleach_frames));
             corrected = corrected / initial;
 
             t = (0:size(recovery,1)-1)' * obj.data.dt;
-            
         end
         
         function [all_recoveries, t] = GetAllRecoveries(obj,opt)
@@ -316,7 +320,7 @@ classdef FrapTool < handle
                 
             else
                 
-                results = obj.GetTrackedJunctionData(obj.selected_roi);
+                results = obj.GetCorrectedKymograph(obj.selected_roi);
                 recovery = sum(results.l2,1)';
                 
                 [recovery,t] = obj.CorrectRecovery(recovery);
@@ -418,8 +422,11 @@ classdef FrapTool < handle
         
         function [kymograph,r] = GenerateKymograph(obj, j)
             
-            results = obj.GetTrackedJunctionData(obj, j);
+            results = obj.GetTrackedJunctionData(j);
             [kymograph,r] = GetCorrectedKymograph(results);
+            
+            pb_curve = obj.GetPhotobleachingCorrection();
+            kymograph = kymograph ./ pb_curve';
 
         end
         
