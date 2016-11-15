@@ -35,7 +35,7 @@ function UpdateDisplay(obj)
     obj.handles.mask_image.CData = ind2rgb(mask_im+1,cmap);
     obj.handles.mask_image.AlphaData = 0.8*(mask_im>0);
 
-    recovery_sel = strcmp({obj.data.roi.type},'Recovery');
+    recovery_sel = strcmp({obj.data.roi.type},'Bleached Region');
 
     [x,y] = obj.data.roi(recovery_sel).GetCoordsForPlot(cur);
     set(obj.handles.display_tracked_roi,'XData',x,'YData',y);
@@ -54,7 +54,7 @@ function UpdateDisplay(obj)
 
     if ~isempty(obj.selected_roi) && obj.selected_roi <= length(obj.data.roi)
 
-        if strcmp(obj.data.roi(obj.selected_roi).type,'Recovery')
+        if strcmp(obj.data.roi(obj.selected_roi).type,'Bleached Region')
             idx = cur;
         else
             idx = 1;

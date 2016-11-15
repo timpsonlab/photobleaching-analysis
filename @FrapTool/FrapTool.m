@@ -15,7 +15,6 @@ classdef FrapTool < handle
         datasets;
         current_index;
         data;
-        last_folder;
                         
         junction_artist;
                 
@@ -33,25 +32,14 @@ classdef FrapTool < handle
 
             obj.SetupLayout(parent, fig);
             obj.SetupCallbacks();
-                        
-            if ispref('FrapTool','last_folder')
-                obj.last_folder = getpref('FrapTool','last_folder');
-            end
-                        
+                                                
             obj.lh = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
         end
         
         function delete(obj)
             delete(obj.roi_handler);
         end
-        
-        function set.last_folder(obj,value)
-            if ischar(value)
-                obj.last_folder = value;
-                setpref('FrapTool','last_folder',value);
-            end
-        end
-                
+               
         function menus = SetupMenu(obj)
             file_menu = uimenu(obj.fh,'Label','File');
             uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
@@ -84,7 +72,7 @@ classdef FrapTool < handle
         function LoadData(obj,root)
             
             if (nargin < 2)
-                [file, root] = uigetfile('*.*','Choose File...',obj.last_folder);
+                [file, root] = uigetfile('*.*','Choose File...',GetLastFolder(obj.fh));
             end
             if file == 0
                 return
@@ -92,7 +80,7 @@ classdef FrapTool < handle
             
             obj.fh.Name = ['FRAP Analysis - ' root file];
 
-            obj.last_folder = root;
+            SetLastFolder(obj.fh,root);
             obj.reader = FrapDataReader([root file]);
             pause(0.1);  
             obj.UpdateDatasetList();
@@ -253,11 +241,15 @@ classdef FrapTool < handle
         function [recovery, t] = GetRecovery(obj,idx,opt)
             d = obj.data;
             
+            if nargin < 2 || isempty(idx)
+                idx = 1:length(d.roi);
+            end
+            
             if nargin > 2 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
-                recovery = d.roi(idx).tracked_recovery;
+                recovery = [d.roi(idx).tracked_recovery];
             else
-                recovery = d.roi(idx).untracked_recovery;
+                recovery = [d.roi(idx).untracked_recovery];
             end
 
             [recovery,t] = obj.CorrectRecovery(recovery);
@@ -279,8 +271,8 @@ classdef FrapTool < handle
             pb_curve = obj.GetPhotobleachingCorrection();
             corrected = recovery ./ pb_curve;
             
-            initial = mean(corrected(1:obj.data.n_prebleach_frames));
-            corrected = corrected / initial;
+            initial = mean(corrected(1:obj.data.n_prebleach_frames,:));
+            corrected = corrected ./ initial;
 
             t = (0:size(recovery,1)-1)' * obj.data.dt;
         end
@@ -294,7 +286,7 @@ classdef FrapTool < handle
 
             all_recoveries = [];
             
-            sel = strcmp({d.roi.type},'Recovery');
+            sel = strcmp({d.roi.type},'Bleached Region');
             idx = 1:length(d.roi);
             idx = idx(sel);
             for i=idx
@@ -388,40 +380,66 @@ classdef FrapTool < handle
            
             obj.TrackJunctions();
             
-            export_folder = uigetdir(obj.last_folder);
+            export_folder = uigetdir(GetLastFolder(obj.fh));
             if export_folder == 0
                 return;
             end
             
             jcns = obj.junction_artist.junctions;
             for i=1:length(jcns)
-                kymograph = obj.GenerateKymograph(i);
+                [kymograph,r] = obj.GenerateKymograph(i);
+                [~,intersection_point] = obj.FindClosestRoiToJunction(i);
+
+                
+                extra.type = jcns(i).type;
+                extra.spatial_unit = obj.data.length_unit;
+                extra.spatial_units_per_pixel = r(2)-r(1);
+                extra.temporal_unit = 's';
+                extra.temporal_units_per_pixel = obj.data.dt;
+                extra.roi_intersection = intersection_point;
+                extra_data = savejson('Kymograph',extra);
+                
+                                                
+                tag.ImageLength = size(kymograph,1);
+                tag.ImageWidth = size(kymograph,2);  
+                tag.SampleFormat = Tiff.SampleFormat.IEEEFP;
+                tag.Photometric = Tiff.Photometric.MinIsBlack;
+                tag.BitsPerSample = 32;
+                tag.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
+                tag.MinSampleValue = nanmin(kymograph(:));
+                tag.MaxSampleValue = nanmax(kymograph(:));
+                tag.Software = 'FrapTool';
+                tag.ImageDescription = extra_data;
+                
                 filename = [obj.data.name '_junction_' num2str(i) '_' Junction.types{jcns(i).type} '.tif'];
-                imwrite(kymograph,[export_folder filesep filename]);
+                t = Tiff([export_folder filesep filename], 'w');
+                t.setTag(tag);
+                t.write(single(kymograph));
+                t.close();
             end
             
         end
         
         function ExportRecovery(obj)
            
-            export_folder = uigetdir(obj.last_folder);
+            export_folder = uigetdir(GetLastFolder(obj.fh));
             if export_folder == 0
                 return;
             end
             
-            recovery_untracked = GetRecovery(obj);
-            [recovery_tracked,t] = GetRecovery(obj,'stable');
-
-            dat = table();
-            dat.T = t;
-            dat.Tracked = recovery_tracked;
-            dat.Untracked = recovery_untracked;
+            sel = strcmp({obj.data.roi.type},'Bleached Region');
+            recovery_untracked = GetRecovery(obj,sel);
+            [recovery_tracked,t] = GetRecovery(obj,sel,'stable');
+                        
+            headers = {obj.data.roi(sel).label};
+            headers = [{'Time (s)'} headers];
             
-            writetable(dat,[export_folder filesep obj.data.name '_recovery.csv']);
+            csvwrite_with_headers([export_folder filesep obj.data.name '_recovery_tracked.csv'], [t recovery_tracked], headers);
+            csvwrite_with_headers([export_folder filesep obj.data.name '_recovery_untracked.csv'], [t recovery_untracked], headers);
             
         end
         
-        function [kymograph,r] = GenerateKymograph(obj, j)
+        function [kymograph,r,results] = GenerateKymograph(obj, j)
             
             results = obj.GetTrackedJunctionData(j);
             [kymograph,r] = GetCorrectedKymograph(results);
@@ -444,6 +462,30 @@ classdef FrapTool < handle
             options.line_width = 9;
 
             results = ExtractTrackedJunctions(obj.data.images, {p}, options);
+                        
+        end
+        
+        function [closest_roi, intersection_point] = FindClosestRoiToJunction(obj, j)
+           
+            jcn = obj.junction_artist.junctions(j);
+            
+            if ~jcn.IsTracked()
+                obj.TrackJunction(j);
+            end
+
+            np = 600;
+            p = jcn.tracked_positions(1,:); 
+            p = GetSplineImg(p,np,'linear');  
+
+            % Get ROI centres
+            sel = strcmp(obj.data.roi.type,'Bleached Region');
+            roi_c = cellfun(@(x) mean(x), {obj.data.roi(sel).position});
+            
+            % Get minimum distances and locations 
+            [dist,loc] = arrayfun(@(x) min(abs(p-x)), roi_c);
+            [~,closest_roi] = min(dist);
+            
+            intersection_point = (loc(closest_roi) - 1) / (np - 1);
             
         end
         

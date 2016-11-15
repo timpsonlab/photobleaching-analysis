@@ -13,41 +13,7 @@ function SetupLayout(obj, parent, fig)
     
     h.tab_panel = uix.TabPanel('Parent',layout);
         
-    % Options sidebar
-    options_panel = uipanel(layout,'Title','Options');
-    ol = OptionsLayout(options_panel);
-
-    ol.StartGroup('Data');
-    h.channel_popup = ol.AddControl('Channel','Style','popupmenu','String',{'1'});
-    h.dt_popup = ol.AddControl('Time Step (s)','Style','edit','String','1','Enable','inactive');
-    h.pixel_size_popup = ol.AddControl('Pixel Size (um)','Style','edit','String','1','Enable','inactive');
-    ol.EndGroup();
-        
-    ol.StartGroup('Motion Compensation');
-    h.drift_compensation_popup = ol.AddControl('Drift Compensation','Style','popupmenu','String',{'Off','On'},'Value',2);
-    h.frame_binning_popup = ol.AddControl('Frame Binning','Style','popupmenu','String',{'1','2','4','8','16'},'Value',4);
-    h.image_smoothing_popup = ol.AddControl('Image Smoothing','Style','popupmenu','String',{'0','2','3','4','5','6','7','8'},'Value',5);
-    h.flow_smoothing_popup = ol.AddControl('Flow Smoothing','Style','popupmenu','String',{'1','2','3','4','5','6','7','8','9','10','11','12'},'Value',8);
-    h.reload_button = ol.AddButton('String','Reload');
-    ol.EndGroup();        
-    
-    
-    ol.StartGroup('Motion Compensation');
-    h.photobleaching_status = ol.AddControl('Calibration','Style','text','String','None Loaded','ForegroundColor','r','Value',2);
-    h.photobleaching_popup = ol.AddControl('Correction','Style','popupmenu','String',{'Off','On'},'Enable','off');
-    h.estimate_photobleaching_button = ol.AddButton('String','Estimate Photobleaching');
-    ol.EndGroup();
-    
-    
-
-    %--- Junctions ---% 
-    ol.StartGroup('Junctions');
-    h.junction_width = ol.AddControl('Width (px)','Style','edit','String','9');
-    ol.EndGroup();
-    
-    ol.Finish();
-    
-    % Display tab
+    %==== Display tab ====
     display_layout_top = uix.HBox('Parent',h.tab_panel,'Spacing',5);
     
     display_layout = uix.VBox('Parent',display_layout_top,'Spacing',5,'Padding',5);
@@ -55,26 +21,16 @@ function SetupLayout(obj, parent, fig)
     display_buttons_layout = uix.HBox('Parent',display_layout);
     
     load(['matlab-ui-common' filesep 'icons.mat']); 
-    h.tool_roi_rect_toggle = uicontrol('Style','togglebutton','CData',rect_icon,...
-                              'Parent',display_buttons_layout);
-    h.tool_roi_circle_toggle = uicontrol('Style','togglebutton','CData',ellipse_icon,...
-                              'Parent',display_buttons_layout);
-    h.tool_roi_poly_toggle = uicontrol('Style','togglebutton','CData',poly_icon,...
-                              'Parent',display_buttons_layout);
+    h.tool_roi_rect_toggle = uicontrol('Style','togglebutton','CData',rect_icon,'Parent',display_buttons_layout);
+    h.tool_roi_circle_toggle = uicontrol('Style','togglebutton','CData',ellipse_icon,'Parent',display_buttons_layout);
+    h.tool_roi_poly_toggle = uicontrol('Style','togglebutton','CData',poly_icon,'Parent',display_buttons_layout);
     
     uicontrol('Style','text','String','Selected ROI: ','HorizontalAlignment','right','Parent',display_buttons_layout);
-    h.roi_name_edit = uicontrol('Style','edit','String','','Enable','off',...
-                              'Parent',display_buttons_layout);
-    h.roi_type_popup = uicontrol('Style','popupmenu','String',{'Recovery','Photobleaching Control'},...
-                              'Parent',display_buttons_layout);
-    h.delete_roi_button = uicontrol('Style','pushbutton','String','Delete',...
-                              'Parent',display_buttons_layout);
-    
+    h.roi_name_edit = uicontrol('Style','edit','String','','Enable','off','Parent',display_buttons_layout);
+    h.roi_type_popup = uicontrol('Style','popupmenu','String',{'Bleached Region','Photobleaching Control'},'Parent',display_buttons_layout);
+    h.delete_roi_button = uicontrol('Style','pushbutton','String','Delete','Parent',display_buttons_layout);
     uix.Empty('Parent',display_buttons_layout);
-    
     display_buttons_layout.Widths = [30 30 30 80 150 150 100 -1];
-
-    
     
     h.image_ax = axes('Parent',display_layout);
     h.image = imagesc(0,'Parent',h.image_ax);
@@ -93,10 +49,10 @@ function SetupLayout(obj, parent, fig)
     display_layout.Heights = [22 -1 22];                      
     display_layout_top.Widths = [-1 -1];       
         
-    % Drawing tab
+    %==== Drawing tab =====
     obj.junction_artist = JunctionArtist(h.tab_panel);
     
-    % Kympograph tab
+    %==== Kympograph tab ====
     kymograph_layout = uix.VBox('Parent',h.tab_panel,'Spacing',5,'Padding',5);
     h.kymograph_select = uicontrol('Style','popupmenu','Parent',kymograph_layout,...
                                    'Callback',@(~,~) obj.UpdateKymograph);
@@ -108,10 +64,39 @@ function SetupLayout(obj, parent, fig)
         
     h.tab_panel.TabTitles = {'Display', 'Junctions', 'Kymographs'};
     h.tab_panel.TabWidth = 90;
-        
-    layout.Widths = [200 -1 200];
-     
     
+    %==== Options sidebar ====
+    options_panel = uipanel(layout,'Title','Options');
+    ol = OptionsLayout(options_panel);
+
+    ol.StartGroup('Data');
+    h.channel_popup = ol.AddControl('Channel','Style','popupmenu','String',{'1'});
+    h.dt_popup = ol.AddControl('Time Step (s)','Style','edit','String','1','Enable','inactive');
+    h.pixel_size_popup = ol.AddControl('Pixel Size (um)','Style','edit','String','1','Enable','inactive');
+    ol.EndGroup();
+        
+    ol.StartGroup('Motion Compensation');
+    h.drift_compensation_popup = ol.AddControl('Drift Compensation','Style','popupmenu','String',{'Off','On'},'Value',2);
+    h.frame_binning_popup = ol.AddControl('Frame Binning','Style','popupmenu','String',{'1','2','4','8','16'},'Value',4);
+    h.image_smoothing_popup = ol.AddControl('Image Smoothing','Style','popupmenu','String',{'0','2','3','4','5','6','7','8'},'Value',5);
+    h.flow_smoothing_popup = ol.AddControl('Flow Smoothing','Style','popupmenu','String',{'1','2','3','4','5','6','7','8','9','10','11','12'},'Value',8);
+    h.reload_button = ol.AddButton('String','Reload');
+    ol.EndGroup();        
+    
+    ol.StartGroup('Motion Compensation');
+    h.photobleaching_status = ol.AddControl('Calibration','Style','text','String','None Loaded','ForegroundColor','r','Value',2);
+    h.photobleaching_popup = ol.AddControl('Correction','Style','popupmenu','String',{'Off','On'},'Enable','off');
+    h.estimate_photobleaching_button = ol.AddButton('String','Estimate Photobleaching');
+    ol.EndGroup();
+
+    ol.StartGroup('Junctions');
+    h.junction_width = ol.AddControl('Width (px)','Style','edit','String','9');
+    ol.EndGroup();
+    
+    ol.Finish();
+    
+    
+    layout.Widths = [200 -1 200];
     obj.handles = h;
     
 end

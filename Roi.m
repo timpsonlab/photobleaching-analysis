@@ -3,7 +3,7 @@ classdef Roi
     properties
         position;
         
-        type = 'Recovery';
+        type = 'Bleached Region';
         tracked_offset = 0;
         
         untracked_recovery;

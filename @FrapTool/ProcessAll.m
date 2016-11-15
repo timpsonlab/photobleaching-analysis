@@ -1,6 +1,7 @@
 function ProcessAll(obj)
 
-    [file, folder] = uiputfile('*.csv','Choose File Name',[obj.last_folder filesep 'recovery.csv']);
+    default_file = [GetLastFolder(obj.fh) filesep 'recovery.csv'];
+    [file, folder] = uiputfile('*.csv','Choose File Name',default_file);
     
     if file == 0
         return
@@ -14,34 +15,37 @@ function ProcessAll(obj)
     tracked_file = [path name '_tracked' ext];
     
     [~,t] = GetRecovery(obj);
-    
-    dat_tracked = table();
-    dat_untracked = table();
-
-    dat_tracked.T = t;
-    dat_untracked.T = t;
-    
+        
     h = waitbar(0,'Processing...');
     
-    for i=1:length(obj.reader.groups)
+    headers = {'Time (s)'};
+    recovery_untracked = t;
+    recovery_tracked = t;
+    
+    for i=1:2 %length(obj.reader.groups)
         
         obj.SwitchDataset(i);
         
-        recovery_untracked = GetRecovery(obj);
-        [recovery_tracked,ti] = GetRecovery(obj,'stable');
-
+        sel = strcmp({obj.data.roi.type},'Bleached Region');
+        ru = GetRecovery(obj,sel);
+        [rt,ti] = GetRecovery(obj,sel,'stable');
+                        
+        hs = {obj.data.roi(sel).label};
+        hs = strcat(obj.data.name, hs);
+        
+        recovery_untracked = [recovery_untracked ru];
+        recovery_tracked = [recovery_tracked rt];
+        headers = [headers hs];
+        
         assert(length(ti) == length(t) && all(ti==t),'All files must have the same time points!');
-        
-        dat_tracked.(obj.data.name) = recovery_tracked;
-        dat_untracked.(obj.data.name) = recovery_untracked;            
-        
+                
         waitbar(i/length(obj.reader.groups),h);
         
     end
-
+    
     delete(h);
     
-    writetable(dat_tracked,tracked_file);
-    writetable(dat_untracked,untracked_file);
-
+    csvwrite_with_headers(tracked_file, recovery_tracked, headers);
+    csvwrite_with_headers(untracked_file, recovery_untracked, headers);
+        
 end

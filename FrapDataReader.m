@@ -155,7 +155,7 @@ classdef FrapDataReader
             end
             
             roi(j).label = roi_ref;
-            roi(j).type = 'Recovery';
+            roi(j).type = 'Bleached Region';
           
         end
         

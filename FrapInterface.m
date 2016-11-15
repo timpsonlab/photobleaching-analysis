@@ -1,15 +1,18 @@
 function handles = FrapInterface()
 
-  
-
     screen_pos = get(0,'ScreenSize');
     pos = [100 100 screen_pos(3:4) - 200];
 
     handles.fh = figure('NumberTitle','off',...
-                    'Name','Frap Analysis',...
+                    'Name','Frap Tool',...
                     'Menu','none',...
                     'Position',pos,...
                     'Toolbar','none');
+
+    if ispref('FrapTool','last_folder')
+        last_folder = getpref('FrapTool','last_folder');
+        SetLastFolder(handles.fh,last_folder);
+    end
 
     color = [117,181,170]/255;
     
