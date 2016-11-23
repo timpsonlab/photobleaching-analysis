@@ -50,7 +50,7 @@ classdef JunctionArtist < handle
 
             h.image_ax = axes('Parent',drawing_layout);
             h.image = imagesc(0,'Parent',h.image_ax);
-            h.frap_roi = plot(h.image_ax,nan,nan,'r');
+            h.frap_roi = plot(h.image_ax,nan,nan,'r','HitTest','off');
 
             drawing_layout.Heights = [22 -1];
             

@@ -3,7 +3,7 @@ function SetCurrent(obj)
     d = obj.data;
 
     obj.handles.dt_edit.String = num2str(d.dt);
-    obj.handles.pixel_size_edit.String = num2str(d.px_per_unit);
+    obj.handles.pixel_size_edit.String = num2str(d.units_per_px);
 
     n = length(d.images);
     obj.handles.image_scroll.Max = n;
@@ -42,6 +42,7 @@ function SetCurrent(obj)
 
     obj.UpdateDisplay();
     obj.UpdateRecoveryCurves();
+    obj.UpdateKymographList();
 
     obj.handles.mask_image.ButtonDownFcn = @(~,~) obj.DisplayMouseDown;
     obj.handles.mask_image.HitTest = 'on';

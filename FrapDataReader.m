@@ -107,7 +107,7 @@ classdef FrapDataReader
         end
         
         frap.images = [im{1}; im{2}];
-        frap.px_per_unit = double(px_size.value);
+        frap.units_per_px = double(px_size.value);
         frap.length_unit = char(px_size.unit.getSymbol);
         frap.dt = dt;
         frap.name = obj.group{s+1};

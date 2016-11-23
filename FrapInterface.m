@@ -1,5 +1,8 @@
 function handles = FrapInterface()
 
+    addpath('layout','jsonlab');
+    GetBioformats();
+
     screen_pos = get(0,'ScreenSize');
     pos = [100 100 screen_pos(3:4) - 200];
 
@@ -16,10 +19,10 @@ function handles = FrapInterface()
 
     color = [117,181,170]/255;
     
-    super_layout = uix.VBox('Parent',handles.fh,'Spacing',5);
+    super_layout = uix.VBox('Parent',handles.fh,'Spacing',5,'BackgroundColor',color);
     
     handles.tab_panel = uix.TabPanel('Parent',super_layout,'TabWidth',200,...
-                                     'FontSize',11);
+                                     'FontSize',11,'FontWeight','bold');
     
     message_layout = uix.VBox('Parent',super_layout,'Padding',3,'BackgroundColor',color);
     h.message_text = uicontrol('Style','text','Parent',message_layout,...

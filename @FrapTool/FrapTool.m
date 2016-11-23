@@ -27,9 +27,6 @@ classdef FrapTool < handle
     methods
         function obj = FrapTool(parent, fig)
 
-            addpath('layout');
-            GetBioformats();
-
             obj.SetupLayout(parent, fig);
             obj.SetupCallbacks();
                                                 
@@ -299,6 +296,7 @@ classdef FrapTool < handle
         function UpdateKymographList(obj)           
             names = obj.junction_artist.GetJunctionNames();
             obj.handles.kymograph_select.String = names;
+            obj.handles.kymograph_select.Value = min(obj.handles.kymograph_select.Value,length(names));
         end
         
         function UpdateRecoveryCurves(obj)
@@ -354,6 +352,7 @@ classdef FrapTool < handle
             [kymograph,r] = GenerateKymograph(obj, junction);
             
             t = (0:size(kymograph,2)-1) * obj.data.dt;
+            r = r * obj.data.units_per_px;
             
             distance_label = ['Distance (' obj.data.length_unit ')'];
             
@@ -366,8 +365,6 @@ classdef FrapTool < handle
             
             lim = 500;
             
-            
-            r = r / obj.data.px_per_unit;
             contrast = ComputeKymographOD_GLCM(r,kymograph,lim);
             
             h_ax = obj.handles.od_glcm_ax;
@@ -388,15 +385,21 @@ classdef FrapTool < handle
             jcns = obj.junction_artist.junctions;
             for i=1:length(jcns)
                 [kymograph,r] = obj.GenerateKymograph(i);
-                [~,intersection_point] = obj.FindClosestRoiToJunction(i);
-
+                [closest_roi,intersection_point] = obj.FindClosestRoiToJunction(i);
+                
+                roi = obj.data.roi(closest_roi).position * obj.data.units_per_px;
+                roi_area = polyarea(real(roi),imag(roi));
                 
                 extra.type = jcns(i).type;
                 extra.spatial_unit = obj.data.length_unit;
-                extra.spatial_units_per_pixel = r(2)-r(1);
+                extra.spatial_units_per_pixel = (r(2)-r(1)) * obj.data.units_per_px;
                 extra.temporal_unit = 's';
                 extra.temporal_units_per_pixel = obj.data.dt;
                 extra.roi_intersection = intersection_point;
+                extra.roi_area = roi_area;
+                extra.roi_x = real(roi);
+                extra.roi_y = imag(roi);
+                extra.n_prebleach_frames = obj.data.n_prebleach_frames;
                 extra_data = savejson('Kymograph',extra);
                 
                                                 
@@ -473,13 +476,15 @@ classdef FrapTool < handle
                 obj.TrackJunction(j);
             end
 
+            frame_idx = obj.data.n_prebleach_frames+1;
+            
             np = 600;
-            p = jcn.tracked_positions(1,:); 
+            p = jcn.tracked_positions(frame_idx,:); 
             p = GetSplineImg(p,np,'linear');  
 
             % Get ROI centres
             sel = strcmp(obj.data.roi.type,'Bleached Region');
-            roi_c = cellfun(@(x) mean(x), {obj.data.roi(sel).position});
+            roi_c = cellfun(@(x) mean(x), {obj.data.roi(sel).tracked_position(frame_idx)});
             
             % Get minimum distances and locations 
             [dist,loc] = arrayfun(@(x) min(abs(p-x)), roi_c);

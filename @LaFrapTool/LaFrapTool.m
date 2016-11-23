@@ -21,7 +21,12 @@ classdef LaFrapTool < handle
             h = obj.handles;
             h.add_button.Callback = @(~,~) obj.AddData();
             h.remove_button.Callback = @(~,~) obj.RemoveData();
+            h.files_list.Callback = @(~,~) obj.UpdateDisplay();
+            h.include_outliers_popup.Callback = @(~,~) obj.UpdateDisplay();
+            h.spatial_display_popup.Callback = @(~,~) obj.UpdateDisplay();
             
+            AddCallbackWithValidator(h.distance_edit, @obj.UpdateDisplay);
+            AddCallbackWithValidator(h.max_time_edit, @obj.UpdateDisplay);
         end
         
         function menus = SetupMenu(obj)
@@ -92,6 +97,10 @@ classdef LaFrapTool < handle
                 
                 if isempty(obj.kymographs)
                     obj.kymographs = kymograph;
+                    
+                    max_t = size(kymograph.data,2) * kymograph.temporal_units_per_pixel;
+                    obj.handles.max_time_edit.String = num2str(max_t);
+                    
                 else
                     obj.kymographs(end+1) = kymograph;
                 end;
