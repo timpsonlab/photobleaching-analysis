@@ -81,9 +81,14 @@ classdef FrapDataReader
             % Kludge for LIF files - we don't seem to get dt out correctly
             dt_leica = str2double(obj.reader.getSeriesMetadataValue('Image|LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
             if isnan(dt_leica)
+                dt_leica = str2double(obj.reader.getSeriesMetadataValue('LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
+            end
+            if isnan(dt_leica)
                 dt_leica = str2double(obj.reader.getSeriesMetadataValue('Image|Block_FRAP|LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
             end
-            
+            if isnan(dt_leica)
+                dt_leica = str2double(obj.reader.getSeriesMetadataValue('Block_FRAP|LDM_Block_Sequential|ATLConfocalSettingDefinition|CycleTime'));
+            end
             im{i} = cell([n_t 1]);
             
             for t=1:n_t
