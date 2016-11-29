@@ -71,8 +71,8 @@ function SetupLayout(obj, parent, fig)
 
     ol.StartGroup('Data');
     h.channel_popup = ol.AddControl('Channel','Style','popupmenu','String',{'1'});
-    h.dt_popup = ol.AddControl('Time Step (s)','Style','edit','String','1','Enable','inactive');
-    h.pixel_size_popup = ol.AddControl('Pixel Size (um)','Style','edit','String','1','Enable','inactive');
+    h.dt_edit = ol.AddControl('Time Step (s)','Style','edit','String','1','Enable','inactive');
+    h.pixel_size_edit = ol.AddControl('Pixel Size (um)','Style','edit','String','1','Enable','inactive');
     ol.EndGroup();
         
     ol.StartGroup('Motion Compensation');

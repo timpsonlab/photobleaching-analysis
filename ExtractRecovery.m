@@ -1,6 +1,6 @@
 function [recovery] = ExtractRecovery(images, roi, p)
 
-    if nargin < 4
+    if nargin < 3
         p = [];
     end
 

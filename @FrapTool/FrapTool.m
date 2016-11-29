@@ -145,10 +145,10 @@ classdef FrapTool < handle
             dist = arrayfun(@(x) min(abs(x.positions-p)), obj.junction_artist.junctions);
             [junction_dist,junction_idx] = min(dist);
             
-            if isempty(roi_dist) 
+            if isempty(junction_dist)
                 obj.SetRoiSelection('roi',roi_idx);
-            elseif isempty(junction_dist)
-                obj.SetRoiSelection('junction',junction_idx);
+            elseif isempty(roi_dist) 
+                obj.SetRoiSelection('roi',roi_idx);
             elseif roi_dist < junction_dist 
                 obj.SetRoiSelection('roi',roi_idx);
             else
@@ -296,7 +296,11 @@ classdef FrapTool < handle
         function UpdateKymographList(obj)           
             names = obj.junction_artist.GetJunctionNames();
             obj.handles.kymograph_select.String = names;
-            obj.handles.kymograph_select.Value = min(obj.handles.kymograph_select.Value,length(names));
+            v = min(obj.handles.kymograph_select.Value,length(names));
+            v = max(v,1);
+            obj.handles.kymograph_select.Value = v;
+            
+            obj.UpdateKymograph();
         end
         
         function UpdateRecoveryCurves(obj)
