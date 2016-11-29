@@ -232,7 +232,7 @@ classdef FrapTool < handle
             obj.selection_type = type;
             obj.selected_roi = idx;
 
-            if strcmp(type,'roi')
+            if strcmp(type,'roi') && ~isempty(idx)
             
                 type = obj.data.roi(idx).type;
                 p = find(strcmp(obj.handles.roi_type_popup.String,type),1);
@@ -376,6 +376,11 @@ classdef FrapTool < handle
         function UpdateKymograph(obj)
            
             junction = obj.handles.kymograph_select.Value;
+            
+            if junction > length(obj.junction_artist.junctions)
+                return;
+            end
+            
             [kymograph,r] = GenerateKymograph(obj, junction);
             
             t = (0:size(kymograph,2)-1) * obj.data.dt;

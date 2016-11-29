@@ -3,6 +3,8 @@ function [recovery] = ExtractRecovery(images, roi, p)
     if nargin < 3
         p = [];
     end
+    
+    assert(length(roi) > 2)
 
     roi_x = real(roi);
     roi_y = imag(roi);

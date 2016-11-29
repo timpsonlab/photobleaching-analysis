@@ -48,7 +48,9 @@ classdef Roi
             p = [];
             for i=1:length(obj)
                 p_i = obj(i).tracked_position(cur);
-                p = [p; nan; p_i; p_i(1)];
+                if ~isempty(p_i)
+                    p = [p; nan; p_i; p_i(1)];
+                end
             end
             x = real(p);
             y = imag(p);
