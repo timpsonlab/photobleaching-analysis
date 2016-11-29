@@ -126,12 +126,13 @@ classdef FrapDataReader
 
         n_roi = obj.meta.getImageROIRefCount(series);
 
+        roi = Roi.empty();
         for j=1:n_roi
             roi_ref = char(obj.meta.getImageROIRef(series,j-1));
             roi_id = strrep(roi_ref,'ROI:','');
             roi_id = str2double(roi_id);
-            
-            roi = Roi();
+                        
+            roi_j = Roi();
             
             n_shape = obj.meta.getShapeCount(roi_id);
             for i=1:n_shape
@@ -145,7 +146,7 @@ classdef FrapDataReader
                         points = cellfun(@str2num,strsplit(points,' ')','UniformOutput',false);
                         points = cell2mat(points);
                         
-                        roi(j) = Roi(points(:,1), points(:,2));
+                        roi_j = Roi(points(:,1), points(:,2));
 
                     case 'Ellipse'
                         
@@ -153,15 +154,29 @@ classdef FrapDataReader
                         
                     case 'Rectangle'
                         
+                        x = double(obj.meta.getRectangleX(roi_id,i-1));
+                        y = double(obj.meta.getRectangleY(roi_id,i-1));
+                        w = double(obj.meta.getRectangleWidth(roi_id,i-1));
+                        h = double(obj.meta.getRectangleHeight(roi_id,i-1));
+                        
+                        points_x = [x x x+w x+w];
+                        points_y = [y y+h y+h y];
+                        
+                        roi_j = Roi(points_x,points_y);
+                        
                         % TODO
                                              
                 end
 
             end
             
-            roi(j).label = roi_ref;
-            roi(j).type = 'Bleached Region';
+            roi_j.label = roi_ref;
+            roi_j.type = 'Bleached Region';
           
+            if ~isempty(roi_j.position)
+                roi(end+1) = roi_j;
+            end
+            
         end
         
     end
