@@ -20,7 +20,8 @@ classdef FrapTool < handle
                 
         lh;
         
-        pb_model;          
+        pb_model;       
+        play_timer;
     end
    
     
@@ -30,6 +31,8 @@ classdef FrapTool < handle
             obj.SetupLayout(parent, fig);
             obj.SetupCallbacks();
                                                 
+            obj.play_timer = timer('TimerFcn', @(~,~) obj.IncrementDisplay(), 'ExecutionMode','fixedRate','Period',0.025);
+            
             obj.lh = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
         end
         
@@ -61,8 +64,28 @@ classdef FrapTool < handle
             h.channel_popup.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
             h.delete_roi_button.Callback = @(~,~) obj.DeleteRoi();
             h.roi_type_popup.Callback = @obj.ChangeRoiType;
+            h.play_button.Callback = @(src,evt) obj.PlayButtonPressed(src,evt);
             obj.roi_handler = RoiHandler(h);
             addlistener(obj.roi_handler,'roi_updated',@(~,~) obj.AddRoi);
+        end
+        
+        function PlayButtonPressed(obj,src,evt)
+            if (src.Value)
+                start(obj.play_timer)
+            else
+                stop(obj.play_timer)
+            end
+        end
+        
+        function IncrementDisplay(obj)
+            
+            v = obj.handles.image_scroll.Value + 1;
+            if v > obj.handles.image_scroll.Max
+                v = 1;
+            end
+            obj.handles.image_scroll.Value = v;
+            obj.UpdateDisplay();
+            
         end
         
         

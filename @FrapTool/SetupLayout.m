@@ -36,11 +36,12 @@ function SetupLayout(obj, parent, fig)
     h.image = imagesc(0,'Parent',h.image_ax);
 
     scroll_layout = uix.HBox('Parent',display_layout);
-    h.scroll_text = uicontrol('Style','text','String','t = 0s','Parent',scroll_layout);
+    h.play_button = uicontrol('Style','togglebutton','String','Play','Parent',scroll_layout);
     h.image_scroll = uicontrol('Style','slider','Min',1,'Max',100,...
                                'Value',1,'SliderStep',[1 1],'Parent',scroll_layout,...
                                'Callback',@(~,~) obj.UpdateDisplay);
-    scroll_layout.Widths = [75 -1];
+    h.scroll_text = uicontrol('Style','text','String','t = 0s','Parent',scroll_layout);
+    scroll_layout.Widths = [100 -1 75];
 
     recovery_layout = uix.VBox('Parent',display_layout_top);
     h.recovery_ax = axes('Parent',recovery_layout);
