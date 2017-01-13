@@ -1,59 +1,8 @@
 function UpdateDisplay(obj)
 
+     [rc,ti_final,combined_kymograph,n] = obj.GenerateCombinedKymograph();
+
     cur = obj.handles.files_list.Value;
-    distance = str2double(obj.handles.distance_edit.String);
-    max_time = str2double(obj.handles.max_time_edit.String);
-    n = 600;
-    
-    rc = linspace(-distance/2,distance/2,n);
-    
-    combined_kymograph = 0;
-       
-    for i=1:length(cur)
-       
-        kymograph = obj.kymographs(cur(i));
-        n = kymograph.n_prebleach_frames;
-        
-        ki = kymograph.data;
-        ri = (0:size(ki,1)-1) * kymograph.spatial_units_per_pixel;
-        ti = (0:size(ki,2)-1) * kymograph.temporal_units_per_pixel;
-        
-        ti = ti - n * kymograph.temporal_units_per_pixel;
-   
-        ti_final = ti(ti < max_time);
-        
-        
-        
-        before = mean(ki(:,1:n),2); 
-        after = mean(ki(:,(n+1):2*n),2); 
-        bleach = after ./ before;
-    
-        kern_width = 2 * sqrt(kymograph.roi_area / pi); % diameter of bleach
-        kern_width = kern_width / kymograph.spatial_units_per_pixel;
-        kern = ones(1,2*ceil(kern_width));
-                
-        ki = ki ./ before;
-     
-        bleach = conv(bleach,kern,'valid');
-        
-        [~,min_loc] = min(bleach);
-        min_loc = min_loc + length(kern)/2; % we only use 'valid' part of kern
-        
-        zero_point = ri(min_loc);
-        
-        
-        
-%        zero_point = max(ri) * kymograph.roi_intersection; % saved as fraction
-        ri = ri - zero_point;
-        
-        kii = interp2(ti,ri',ki,ti_final,rc');
-        
-        combined_kymograph = combined_kymograph + kii;
-        
-    end
-    
-    combined_kymograph = combined_kymograph / length(cur);
-    
     if ~isempty(cur)
                 
         ax = obj.handles.image_ax;
@@ -64,8 +13,7 @@ function UpdateDisplay(obj)
         ax.YLim = [min(rc) max(rc)];
         ax.XLim = [min(ti_final) max(ti_final)];
         TightAxes(ax);
-        
-        
+                
         k = combined_kymograph;
         sz = size(k);
         d = 10;
@@ -79,7 +27,7 @@ function UpdateDisplay(obj)
         
         k_fit = nan(size(k));
         
-        parfor j=(n+1):sz(2)
+        parfor j=(n+1):1:sz(2)
             
             kj = double(k(:,j)');
             sel = isfinite(kj);
@@ -153,7 +101,7 @@ function UpdateDisplay(obj)
         ci = confint(fitobj,0.95);
         ci = ci(:,1) / 4;
         
-        str = ['Diffusion Coeff: ' num2str(D,3) ' (' num2str(ci(1),3) ' - ' num2str(ci(2),3) ') \mum^s/s'];
+        str = ['Diffusion Coeff: ' num2str(D,3) ' (' num2str(ci(1),3) ' - ' num2str(ci(2),3) ') \mum^2/s'];
         text(max(ti_final), 0, str, ... 
              'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom',...
              'Parent',ax);

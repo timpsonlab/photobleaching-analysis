@@ -47,6 +47,7 @@ classdef FrapTool < handle
             uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
             uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) obj.ProcessAll);
             uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
+            uimenu(file_menu,'Label','Export for Figure...','Callback',@(~,~) obj.ExportForFigure,'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
             uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) obj.TrackJunctions,'Accelerator','T');
@@ -514,15 +515,117 @@ classdef FrapTool < handle
             p = jcn.tracked_positions(frame_idx,:); 
             p = GetSplineImg(p,np,'linear');  
 
-            % Get ROI centres
-            sel = strcmp(obj.data.roi.type,'Bleached Region');
-            roi_c = cellfun(@(x) mean(x), {obj.data.roi(sel).tracked_position(frame_idx)});
+            % TODO : warning if no bleach ROI found
             
+            % Get ROI centres
+            sel = strcmp({obj.data.roi.type},'Bleached Region');
+            idx = 1:length(obj.data.roi);
+            sel = idx(sel);
+            
+            for i=1:length(sel)
+                roi_c(i) = mean(obj.data.roi(sel(i)).tracked_position(frame_idx));
+            end
             % Get minimum distances and locations 
             [dist,loc] = arrayfun(@(x) min(abs(p-x)), roi_c);
             [~,closest_roi] = min(dist);
             
             intersection_point = (loc(closest_roi) - 1) / (np - 1);
+            
+        end
+        
+        function ExportForFigure(obj)
+           
+            figh = figure(100);
+            clf(figh);
+            
+            cmap = parula(length(obj.data.images));
+            color_im = 0;
+            int_im = 0;
+            for i=1:length(obj.data.images)
+               
+                im = double(obj.data.images{i}) / 256;
+                color = cmap(i,:);
+                color = reshape(color,[1 1 3]);
+                color = repmat(color,[size(im) 1]);
+                
+                
+                imi = im .* color;
+                
+                color_im = color_im + imi;
+                int_im = int_im + im;
+                
+            end
+            
+            color_im = color_im / (0.5*max(color_im(:)));
+            image(color_im);
+            daspect([1 1 1]);
+            
+            r = obj.data.roi(obj.selected_roi);
+
+            hold on;
+            plot(r.position,'r-');
+            
+            %=====
+            
+            figh = figure(101);
+            clf(figh);
+            
+            rect = [];
+            
+            
+            padding = 15;
+            x0 = floor(min(real(r.position))) - padding;
+            x1 = ceil(max(real(r.position))) + padding;
+            y0 = floor(min(imag(r.position))) - padding;
+            y1 = ceil(max(imag(r.position))) + padding;
+            
+             for i=1:length(obj.data.images)
+               
+                im = double(obj.data.images{i}) / 256;
+                
+                x = round(real(r.tracked_offset(i)));
+                y = round(imag(r.tracked_offset(i)));
+                rect(:,:,1,i) = im((y0:y1) + y, (x0:x1) + x);
+                rect_uc(:,:,1,i) = im((y0:y1), (x0:x1));
+                                
+             end
+            
+             fl = obj.data.flow((y0:y1), (x0:x1), :);
+             
+             sel = 1:25:length(obj.data.images);
+             n = length(sel);
+             
+             %subplot(2,1,1)
+             %montage(rect(:,:,:,sel),'Size',[1,n])
+             
+             %subplot(2,1,2)
+             rect_uc = repmat(rect_uc,[1 1 3 1]);
+             rect_uc(:,:,[1,3],:) = 0;
+             
+             fl = fl(:,:,sel);
+             sz = size(fl);
+             flm = reshape(fl,[sz(1) sz(2)*sz(3)]);
+             
+             sz = size(flm);
+             
+             nd = 10;
+             x = 1:nd:sz(2);
+             y = 1:nd:sz(1);
+             
+             flmr = imresize(real(flm),1/nd);
+             flmi = imresize(imag(flm),1/nd);
+             [X,Y] = meshgrid(x,y);
+             
+             
+             montage(rect_uc(:,:,:,sel),'Size',[1,n])
+             hold on;
+             for i=1:length(sel)
+                plot(real(r.position)+(i-1)*(x1-x0+1)-x0, imag(r.position)-y0,'w-') 
+                offset = r.tracked_offset(sel(i));
+                plot(real(r.position+offset)+(i-1)*(x1-x0+1)-x0, imag(r.position+offset)-y0,'r-') 
+             end
+             quiver(X,Y,flmr,flmi,'r');
+            
             
         end
         

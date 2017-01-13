@@ -84,12 +84,7 @@ for j=1:length(R)
     
     kg{j} = l2nn;
     
-    combined_norm = combined_norm + ~isnan(l2nn);
-    l2nn(isnan(l2nn)) = 0;
-    combined = combined + l2nn;
-    
-    
-    
+      
     
     imagesc(t,r-r0,l2n)
     xlabel('Time (s)');

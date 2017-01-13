@@ -23,6 +23,12 @@ classdef OptionsLayout < handle
             obj.grid_idx = length(obj.layout.Children);
         end
         
+        function lay = StartCustomGroup(obj,label)
+            uicontrol('Style','text','String',label,'FontWeight','bold','Parent',obj.layout);
+            obj.layout.Heights(end) = 22;
+            lay = obj.layout;
+        end
+        
         function control = AddControl(obj,label,varargin)
             if isempty(obj.grid)
                 obj.StartGroup('Options')
@@ -50,6 +56,10 @@ classdef OptionsLayout < handle
         function control = AddButton(obj,varargin)
             control = uicontrol('Style','pushbutton','Parent',obj.layout,varargin{:});
             obj.layout.Heights(end) = 22;
+        end
+        
+        function SetLastControlHeight(obj, height)
+            obj.layout.Heights(end) = height;
         end
         
         function Finish(obj)

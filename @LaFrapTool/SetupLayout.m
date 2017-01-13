@@ -38,11 +38,38 @@ function SetupLayout(obj, parent, fig)
     h.spatial_display_popup = ol.AddControl('Show spatial','Style','popupmenu','String',{'Data','Fitted'});
     h.include_outliers_popup = ol.AddControl('Scale outliders','Style','popupmenu','String',{'No','Yes'});
     ol.EndGroup();
+    
+    params.names = {'dx','fb','x0','I0','m'};
+    params.initial_values = {3, 0.8, 0, 1, 1};
+    params.lim_min = {1, 0, -5, 0, 0.1};
+    params.lim_max = {5, 1, 5, 1.5, 30};
+    params.fit = {false, true, true, true, true};
 
+    l = ol.StartCustomGroup('Bleach Fitting');
+    h.bleach_param_table = FitParameterTable(l, params);
+    ol.SetLastControlHeight(120);
+    ol.EndGroup();
+    
+    params.names = {'If','D','koff1','koff2','kf1','k_bleach'};
+    params.initial_values = {0.5, 0.01, 0.01, 0.001, 1, 0};
+    params.lim_min = {0, 0, 0, 0, 0, 0};
+    params.lim_max = {1, 1, 1, 1, 1, 1};
+    params.fit = {true, true, true, false, false, true};
 
+    l = ol.StartCustomGroup('Recovery Fitting');
+    h.recovery_param_table = FitParameterTable(l, params);
+    ol.SetLastControlHeight(120);
+    h.fit_button = ol.AddButton('String','Fit');    
+    ol.EndGroup();
+
+    l = ol.StartCustomGroup('Fit Results');
+    h.fit_table = uitable('Parent',l);
+    ol.SetLastControlHeight(150);
+    ol.EndGroup();
+    
     ol.Finish();
 
-    layout.Widths = [200 -1 200];
+    layout.Widths = [200 -1 300];
 
     obj.handles = h;
 

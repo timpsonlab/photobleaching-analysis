@@ -41,6 +41,8 @@ function SwitchDataset(obj,i)
                                    obj.reader.file,...
                                    obj.current_index);
 
+    h.tab_panel.Selection = 1;
+
     obj.UpdateKymographList();
     obj.SetCurrent();
 end

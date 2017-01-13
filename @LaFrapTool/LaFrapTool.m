@@ -24,7 +24,8 @@ classdef LaFrapTool < handle
             h.files_list.Callback = @(~,~) obj.UpdateDisplay();
             h.include_outliers_popup.Callback = @(~,~) obj.UpdateDisplay();
             h.spatial_display_popup.Callback = @(~,~) obj.UpdateDisplay();
-            
+            h.fit_button.Callback = @(~,~) obj.FitKymograph();
+
             AddCallbackWithValidator(h.distance_edit, @obj.UpdateDisplay);
             AddCallbackWithValidator(h.max_time_edit, @obj.UpdateDisplay);
         end
