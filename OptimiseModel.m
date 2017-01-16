@@ -1,8 +1,23 @@
-function [model,fval,fitted] = OptimiseModel(model, fields, lb, ub, x, t, data, fcn, use_global)
+function [model,fval,fitted] = OptimiseModel(model, params, group, x, t, data, fcn, use_global)
 
-    vars0 = zeros(1,length(fields));
-    for j=1:length(fields)
-        vars0(j) = model.(fields{j});
+    params = params.(group);
+
+    vars0 = [];
+    entry = [];
+    name = {};
+    lb = [];
+    ub = [];
+    
+    for j=1:size(params,1)
+        for k=1:size(params,2)
+            if params(j,k).fit
+                vars0(end+1) = params(j,k).initial;
+                entry(end+1) = j;
+                name{end+1} = params(j,k).name;
+                lb(end+1) = params(j,k).min;
+                ub(end+1) = params(j,k).max;
+            end
+        end
     end
     
     evals = 0;
@@ -20,24 +35,19 @@ function [model,fval,fitted] = OptimiseModel(model, fields, lb, ub, x, t, data, 
            'StepTolerance',1e-10);
         [vars,fval] = fmincon(@evalmodel,vars0,[],[],[],[],lb,ub,[],opts);
     end
-    
-    
-    for j=1:length(fields)
-        model.(fields{j}) = vars(j);
-    end
-    
+      
     fitted = [];
-    evalmodel(vars,false);
-    
-    function R = evalmodel(vars,display)
+    [R,model] = evalmodel(vars,false);
+
+    function [R,m] = evalmodel(vars,display)
         
         if nargin < 2
            display = false;
         end
         
         m = model;
-        for i=1:length(fields)
-            m.(fields{i}) = vars(i);
+        for i=1:length(vars)
+            m.(group)(entry(i)).(name{i}) = vars(i);
         end
         
         A = fcn(m,x,t);

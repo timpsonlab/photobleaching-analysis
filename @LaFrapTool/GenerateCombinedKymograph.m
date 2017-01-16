@@ -32,7 +32,7 @@ function [r,t,kymograph,n] = GenerateCombinedKymograph(obj)
     
         kern_width = 2 * sqrt(kymograph.roi_area / pi); % diameter of bleach
         kern_width = kern_width / kymograph.spatial_units_per_pixel;
-        kern_width = 50;
+        kern_width = 60;
         
         kern = ones(1,2*ceil(kern_width));
                 

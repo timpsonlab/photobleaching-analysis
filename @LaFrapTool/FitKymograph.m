@@ -6,38 +6,18 @@ function FitKymograph(obj)
     t = t - t(1);
     kymograph = kymograph(:,(n+1):end);
 
-    bleach_params = obj.handles.bleach_param_table.GetParams();
-    recovery_params = obj.handles.recovery_param_table.GetParams();
-
-    figure(102)
-
-    model = struct();
-    model.I0 = 1; % inital intensity
-    model.dx = 3.0; % extent of bleach region
-    model.x0 = 0; % bleach centre
-    model.m = 10; % steepness of edges
-    model.fb = 0.8; % bleach fraction
-
-    model.If = 0.5; % immobile fraction
-    model.D = 0.0001; % Diffusion coefficent
-    model.koff1 = 0.01; % Transport rate 1
-    model.koff2 = 0.001; % Transport rate 2
-    model.kf1 = 0.5;
-    
-    model.k_bleach = 0;
-
-    % Set initial values
-    for p = [bleach_params recovery_params]
-        model.(p.name) = p.initial;
+    params.bleach = obj.handles.bleach_param_table.GetParams();
+    for i=1:length(obj.handles.recovery_param_table)
+        params.component(i,:) = obj.handles.recovery_param_table(i).GetParams();
     end
 
-    % only fit selected parameters
-    bleach_params = bleach_params([bleach_params.fit]);
-    recovery_params = recovery_params([recovery_params.fit]);
+    model = ParamsToModel(params);
+    
+    figure(102)
 
     colormap('hot')
     subplot(4,1,1)
-    model = OptimiseModel(model,{bleach_params.name},[bleach_params.min],[bleach_params.max],r,0,kymograph(:,1),@FRAPg,false);
+    model = OptimiseModel(model,params,'bleach',r,0,kymograph(:,1),@FRAPg2,false);
     ylim([0 1.2])
 
     subplot(4,1,2)
@@ -49,20 +29,34 @@ function FitKymograph(obj)
 
     subplot(4,1,3)
     %[model,fval] = OptimiseModel(model,{'D','koff','If','k_bleach'},[0 0 0 0],[0.1 0.1 1 1e-3],rr,tt,data,@FRAPg)
-    [model,fval,fitted] = OptimiseModel(model,{recovery_params.name},[recovery_params.min],[recovery_params.max],r,t,kymograph,@FRAPg,false);
+    [model,fval,fitted] = OptimiseModel(model,params,'component',r,t,kymograph,@FRAPg2,false);
         
     subplot(4,1,4)
     im = abs(kymograph-fitted);
     imagesc(im);
     caxis([0 0.4])
 
-    fields = fieldnames(model);
-
-    for i=1:length(fields)
-        data(i,1) = model.(fields{i});
+    data = [];
+    
+    fields = fieldnames(model.component);
+    for j=1:length(model.component)
+        for i=1:length(fields)
+            data(i,j) = model.component(j).(fields{i});
+        end
     end
+    names = fields;
 
+    names = [names; {'res'}];
+    data(end+1,1) = fval;
+    
+    fields = fieldnames(model.bleach);
+    for i=1:length(fields)
+        data(end+1,1) = model.bleach.(fields{i});
+    end
+    names = [names; fields];
+
+    
     obj.handles.fit_table.Data = data;
-    obj.handles.fit_table.RowName = fields;
+    obj.handles.fit_table.RowName = names;
 
 end

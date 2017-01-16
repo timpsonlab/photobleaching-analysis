@@ -13,7 +13,8 @@ function UpdateDisplay(obj)
         ax.YLim = [min(rc) max(rc)];
         ax.XLim = [min(ti_final) max(ti_final)];
         TightAxes(ax);
-                
+        ax.CLim = [0 1.1]
+          
         k = combined_kymograph;
         sz = size(k);
         d = 10;
@@ -47,6 +48,7 @@ function UpdateDisplay(obj)
         [~,stats] = robustfit(ti_final(sel),s(sel));
         
         [fitobj] = fit(ti_final(sel)',s(sel)','poly1','Weights',stats.w);
+        %[fitobj] = fit(ti_final(sel)',s(sel)','poly1');
         
         s_fit = fitobj.p2 + ti_final * fitobj.p1;
         %{
@@ -85,12 +87,15 @@ function UpdateDisplay(obj)
 
         
         ax = obj.handles.fit_ax;
-        plot(ax,ti_final,s,'o','Color',[0.5 0.5 0.5]);
-        hold(ax,'on');
-        plot(ax,ti_final,s_fit,'k-');
-        plot(ax,ti_final,p_lim,'r--');
-        hold(ax,'off');
-        ax.YLim = [0 max_y];
+        plot(ax,ti_final,a,'o','Color',[0.5 0.5 0.5]);
+        hold(ax,'on')
+        plot(ax,ti_final,1./s,'o','Color','b');
+        hold(ax,'off')
+        %hold(ax,'on');
+      %  plot(ax,ti_final,s_fit,'k-');
+      %  plot(ax,ti_final,p_lim,'r--');
+      %  hold(ax,'off');
+      %  ax.YLim = [0 max_y];
         ax.XLabel.String = 'Time (s)';
         ax.YLabel.String = 'Width (\mum)';
         ax.Title.String = 'Width of bleached region with time';

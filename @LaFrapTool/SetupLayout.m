@@ -43,22 +43,28 @@ function SetupLayout(obj, parent, fig)
     params.initial_values = {3, 0.8, 0, 1, 1};
     params.lim_min = {1, 0, -5, 0, 0.1};
     params.lim_max = {5, 1, 5, 1.5, 30};
-    params.fit = {false, true, true, true, true};
+    params.fit = {true, true, true, true, true};
 
     l = ol.StartCustomGroup('Bleach Fitting');
     h.bleach_param_table = FitParameterTable(l, params);
     ol.SetLastControlHeight(120);
     ol.EndGroup();
     
-    params.names = {'If','D','koff1','koff2','kf1','k_bleach'};
-    params.initial_values = {0.5, 0.01, 0.01, 0.001, 1, 0};
-    params.lim_min = {0, 0, 0, 0, 0, 0};
-    params.lim_max = {1, 1, 1, 1, 1, 1};
-    params.fit = {true, true, true, false, false, true};
+    params.names = {'D','koff','f'};
+    params.initial_values = {0.01, 0.01, 1};
+    params.lim_min = {0, 0, 0};
+    params.lim_max = {1, 1, 1};
+    params.fit = {true, true, true};
 
     l = ol.StartCustomGroup('Recovery Fitting');
-    h.recovery_param_table = FitParameterTable(l, params);
-    ol.SetLastControlHeight(120);
+    h.recovery_param_table(1) = FitParameterTable(l, params);
+    ol.SetLastControlHeight(90);
+
+
+    params.fit{3} = false; 
+
+    h.recovery_param_table(2) = FitParameterTable(l, params);
+    ol.SetLastControlHeight(90);
     h.fit_button = ol.AddButton('String','Fit');    
     ol.EndGroup();
 
