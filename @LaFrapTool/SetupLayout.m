@@ -27,7 +27,7 @@ function SetupLayout(obj, parent, fig)
         
     %==== Options sidebar ====
     options_panel = uipanel(layout,'Title','Options');
-    ol = OptionsLayout(options_panel);
+    ol = options_layout(options_panel);
 
     ol.StartGroup('Resampling');
     h.distance_edit = ol.AddControl('Distance (um)','Style','edit','String',{'10.0'});

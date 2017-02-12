@@ -68,7 +68,7 @@ function SetupLayout(obj, parent, fig)
     
     %==== Options sidebar ====
     options_panel = uipanel(layout,'Title','Options');
-    ol = OptionsLayout(options_panel);
+    ol = options_layout(options_panel);
 
     ol.StartGroup('Data');
     h.channel_popup = ol.AddControl('Channel','Style','popupmenu','String',{'1'});
