@@ -71,20 +71,22 @@ function SetupLayout(obj, parent, fig)
     ol = options_layout(options_panel);
 
     ol.StartGroup('Data');
+    h.load_option_popup = ol.AddControl('Load','Style','popupmenu','String',{'All Data','Only First'},'Value',1);
     h.channel_popup = ol.AddControl('Channel','Style','popupmenu','String',{'1'});
     h.dt_edit = ol.AddControl('Time Step (s)','Style','edit','String','1','Enable','inactive');
     h.pixel_size_edit = ol.AddControl('Pixel Size (um)','Style','edit','String','1','Enable','inactive');
     ol.EndGroup();
         
     ol.StartGroup('Motion Compensation');
-    h.drift_compensation_popup = ol.AddControl('Drift Compensation','Style','popupmenu','String',{'Off','On'},'Value',2);
+    h.drift_compensation_popup = ol.AddControl('Drift Compensation','Style','popupmenu','String',{'Off','On'},'Value',1);
+    h.flow_compensation_popup = ol.AddControl('Flow Compensation','Style','popupmenu','String',{'Off','On'},'Value',1);
     h.frame_binning_popup = ol.AddControl('Frame Binning','Style','popupmenu','String',{'1','2','4','8','16'},'Value',4);
     h.image_smoothing_popup = ol.AddControl('Image Smoothing','Style','popupmenu','String',{'0','2','3','4','5','6','7','8'},'Value',5);
     h.flow_smoothing_popup = ol.AddControl('Flow Smoothing','Style','popupmenu','String',{'1','2','3','4','5','6','7','8','9','10','11','12'},'Value',8);
     h.reload_button = ol.AddButton('String','Reload');
     ol.EndGroup();        
     
-    ol.StartGroup('Motion Compensation');
+    ol.StartGroup('Photobleaching Correction');
     h.photobleaching_status = ol.AddControl('Calibration','Style','text','String','None Loaded','ForegroundColor','r','Value',2);
     h.photobleaching_popup = ol.AddControl('Correction','Style','popupmenu','String',{'Off','On'},'Enable','off');
     h.estimate_photobleaching_button = ol.AddButton('String','Estimate Photobleaching');

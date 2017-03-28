@@ -62,16 +62,25 @@ classdef FrapDataReader
         n_channel = double(obj.meta.getChannelCount(matching_id));
     end
     
-    function frap = GetGroup(obj,g,channel)
+    function frap = GetGroup(obj,g,channel,first_only)
         
         if nargin < 3
             channel = 1;
         end
+        if nargin < 4
+            first_only = false;
+        end
         
         matching_id = find(strcmp(obj.group,g)) - 1;
         
-        im = cell([1,2]);
-        for i=1:2 % we know there are two matching ids
+        if first_only
+            use = 1;
+        else
+            use = 1:2;
+        end
+        
+        im = cell(size(use));
+        for i=use % we know there are two matching ids
             
             % Activate series
             obj.reader.setSeries(matching_id(i));
@@ -111,7 +120,11 @@ classdef FrapDataReader
             end
         end
         
-        frap.images = [im{1}; im{2}];
+        frap.images = {};
+        for i=1:use
+            frap.images = [frap.images; im{i}];
+        end
+        
         frap.units_per_px = double(px_size.value);
         frap.length_unit = char(px_size.unit.getSymbol);
         frap.dt = dt;
