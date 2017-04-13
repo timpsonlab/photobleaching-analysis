@@ -121,7 +121,7 @@ classdef FrapDataReader
         end
         
         frap.images = {};
-        for i=1:use
+        for i=use
             frap.images = [frap.images; im{i}];
         end
         

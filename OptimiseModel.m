@@ -1,5 +1,11 @@
 function [model,fval,fitted] = OptimiseModel(model, params, group, x, t, data, fcn, use_global)
 
+    if nargin < 8
+        use_global = false;
+    end
+
+    data = double(data);
+    
     params = params.(group);
 
     vars0 = [];
@@ -52,10 +58,10 @@ function [model,fval,fitted] = OptimiseModel(model, params, group, x, t, data, f
         
         A = fcn(m,x,t);
         fitted = A;
-        R = (A - double(data)).^2;
+        R = (A - data).^2;
         R = nanmean(R(:));
    
-        if mod(evals,200) == 0 || display
+        if (evals > 0 && mod(evals,20000) == 0) || display
             if length(t) == 1
                 plot(x,A);
                 hold on;
@@ -64,7 +70,7 @@ function [model,fval,fitted] = OptimiseModel(model, params, group, x, t, data, f
             else
                 imagesc(t,x,A);
                 colorbar
-                caxis([0 1.2])
+%                caxis([0 1.2])
                 drawnow
             end
         end

@@ -49,6 +49,7 @@ classdef JunctionArtist < handle
             set(drawing_buttons_layout,'Widths',[100*ones(1,length(Junction.types)+2) 10 100 -1]);
 
             h.image_ax = axes('Parent',drawing_layout);
+            set(h.image_ax,'Units','normalized','Position',[0.02 0.02 0.94 0.94]);
             h.image = imagesc(0,'Parent',h.image_ax);
             h.frap_roi = plot(h.image_ax,nan,nan,'r','HitTest','off');
 

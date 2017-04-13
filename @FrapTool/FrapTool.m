@@ -47,6 +47,8 @@ classdef FrapTool < handle
             uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
             uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) obj.ProcessAll);
             uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
+            uimenu(file_menu,'Label','Export Kymographs for all Datasets...','Callback',@(~,~) obj.ExportAllKymographs);
+            uimenu(file_menu,'Label','Batch Export...','Callback',@(~,~) obj.BatchExport,'Separator','on');
             uimenu(file_menu,'Label','Export for Figure...','Callback',@(~,~) obj.ExportForFigure,'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
@@ -94,6 +96,9 @@ classdef FrapTool < handle
             
             if (nargin < 2)
                 [file, root] = uigetfile('*.*','Choose File...',GetLastFolder(obj.fh));
+            else
+                [root, file, ext] = fileparts(root);
+                file = [file ext];
             end
             if file == 0
                 return
@@ -357,8 +362,11 @@ classdef FrapTool < handle
             
             np = 50;
             p = obj.junction_artist.junctions(j).positions;
-            t = TrackJunction(obj.data.flow, p, true, np);
-            obj.junction_artist.junctions(j).tracked_positions = t;
+            
+            if length(p) > 1
+                t = TrackJunction(obj.data.flow, p, true, np);
+                obj.junction_artist.junctions(j).tracked_positions = t;
+            end
             
         end
 
@@ -406,14 +414,31 @@ classdef FrapTool < handle
             ylabel(h_ax,'Contrast');
         end
         
-        function ExportKymographs(obj)
+        function BatchProcess(obj)
            
-            obj.TrackJunctions();
+            options = BatchProcessingUi();
             
-            export_folder = uigetdir(GetLastFolder(obj.fh));
+            if isempty(options)
+                return;
+            end
+            
+            for i=1:length(options.files)
+                obj.LoadData(options.files{i});
+                                
+            end
+            
+        end
+        
+        function ExportKymographs(obj, export_folder)
+           
+            if nargin < 2
+                export_folder = uigetdir(GetLastFolder(obj.fh));
+            end
             if export_folder == 0
                 return;
             end
+            
+            obj.TrackJunctions();
             
             jcns = obj.junction_artist.junctions;
             for i=1:length(jcns)
@@ -454,6 +479,33 @@ classdef FrapTool < handle
                 t.close();
             end
             
+        end
+        
+        function ExportAllKymographs(obj,export_folder)
+
+            if nargin < 2
+                export_folder = uigetdir(GetLastFolder(obj.fh));
+            end
+            if export_folder == 0
+                return;
+            end
+
+            stored_load_option = obj.handles.load_option_popup.Value;
+            obj.handles.load_option_popup.Value = 1; % Load all data;
+            
+            h = waitbar(0,'Processing...');
+
+            for i=1:length(obj.reader.groups)
+                obj.SwitchDataset(i);
+                obj.ExportKymographs(export_folder);
+
+                waitbar(i/length(obj.reader.groups),h);
+            end
+            
+            delete(h);
+            
+            obj.handles.load_option_popup.Value = stored_load_option;
+
         end
         
         function ExportRecovery(obj)

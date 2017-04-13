@@ -32,7 +32,7 @@ function SwitchDataset(obj,i)
     sel = (obj.data.n_prebleach_frames+1):length(obj.data.images);
     after_images = obj.data.images(sel);
     
-    if options.use_flow_compensation
+    if options.use_flow_compensation && length(after_images) > 2
         MessageHandler.send('GarvanFrap','Computing optical flow...');
         obj.data.flow = ComputeOpticalFlow(after_images,options);
     
@@ -49,7 +49,7 @@ function SwitchDataset(obj,i)
                                    obj.reader.file,...
                                    obj.current_index);
 
-    obj.handles.tab_panel.Selection = 1;
+    %obj.handles.tab_panel.Selection = 1;
 
     obj.UpdateKymographList();
     obj.SetCurrent();

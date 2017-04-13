@@ -1,4 +1,4 @@
-            function flow = ComputeOpticalFlow(ims, options)
+function flow = ComputeOpticalFlow(ims, options)
 % ComputeOpticalFlow Compute optical flow between a series of images
 %
 %    Wrapper for OpticalFlow from Vision Toolbox

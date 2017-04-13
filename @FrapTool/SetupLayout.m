@@ -33,6 +33,8 @@ function SetupLayout(obj, parent, fig)
     display_buttons_layout.Widths = [30 30 30 80 150 150 100 -1];
     
     h.image_ax = axes('Parent',display_layout);
+    set(h.image_ax,'Units','normalized','Position',[0.02 0.02 0.94 0.94]);
+
     h.image = imagesc(0,'Parent',h.image_ax);
 
     scroll_layout = uix.HBox('Parent',display_layout);

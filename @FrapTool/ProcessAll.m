@@ -7,6 +7,9 @@ function ProcessAll(obj)
         return
     end
     
+    stored_load_option = obj.handles.load_option_popup.Value;
+    obj.handles.load_option_popup.Value = 1; % Load all data;
+    
     file = [folder file];
 
     [path,name,ext] = fileparts(file);
@@ -22,7 +25,7 @@ function ProcessAll(obj)
     recovery_untracked = t;
     recovery_tracked = t;
     
-    for i=1:2 %length(obj.reader.groups)
+    for i=1:length(obj.reader.groups)
         
         obj.SwitchDataset(i);
         
@@ -48,4 +51,6 @@ function ProcessAll(obj)
     csvwrite_with_headers(tracked_file, recovery_tracked, headers);
     csvwrite_with_headers(untracked_file, recovery_untracked, headers);
         
+    obj.handles.load_option_popup.Value = stored_load_option;
+
 end
