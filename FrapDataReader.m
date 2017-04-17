@@ -26,7 +26,7 @@ classdef FrapDataReader
         name = arrayfun(@(x) char(m.getImageName(x-1)), 1:n_image, 'UniformOutput', false);
 
         % Match FRAP group and series 
-        tokens = regexp(name,'(FRAP.*)\/(.+)','tokens');
+        tokens = regexp(name,'([^/]+/)*(.+)','tokens');
         matched = cellfun(@(x) ~isempty(x), tokens);
 
         matched_idx = 1:n_image;

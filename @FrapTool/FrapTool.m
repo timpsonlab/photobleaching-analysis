@@ -109,6 +109,12 @@ classdef FrapTool < handle
             SetLastFolder(obj.fh,root);
             obj.reader = FrapDataReader([root file]);
             pause(0.1);  
+            
+            if isempty(obj.reader.groups)
+                errordlg('No FRAP datasets found!');
+                return;
+            end
+            
             obj.UpdateDatasetList();
             obj.SwitchDataset(1);
             
