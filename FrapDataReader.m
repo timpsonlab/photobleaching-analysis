@@ -35,6 +35,8 @@ classdef FrapDataReader
         group = cellfun(@(x) x{1}{1}, tokens(matched), 'UniformOutput', false);
         series = cellfun(@(x) x{1}{2}, tokens(matched), 'UniformOutput', false);
 
+        group = strrep(group,'/',' ');
+        
         % Get unique groups
         [obj.groups,~,group_id] = unique(group);
 
