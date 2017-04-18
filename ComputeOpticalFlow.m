@@ -53,6 +53,8 @@ function flow = ComputeOpticalFlow(ims, options)
     poolsize = poolobj.NumWorkers;
     lflow_all = cell([1 poolsize]);
     pool_data = cell([1 poolsize]);
+    
+    disp(['Pool size: ' num2str(poolsize)]);
 
     m = ceil(n / poolsize);
     for q=1:poolsize
