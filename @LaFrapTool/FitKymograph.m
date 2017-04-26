@@ -33,8 +33,9 @@ function FitKymograph(obj)
         
     subplot(4,1,4)
     im = abs(kymograph-fitted);
-    imagesc(im);
+    imagesc(t,r,im);
     caxis([0 0.4])
+    colorbar
 
     data = [];
     
