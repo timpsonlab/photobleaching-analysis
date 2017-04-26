@@ -90,6 +90,7 @@ function SetupLayout(obj, parent, fig)
     
     ol.StartGroup('Photobleaching Correction');
     h.photobleaching_status = ol.AddControl('Calibration','Style','text','String','None Loaded','ForegroundColor','r','Value',2);
+    h.photobleaching_source_popup = ol.AddControl('Estimate using','Style','popupmenu','String',{'Regions','Junctions'});
     h.photobleaching_popup = ol.AddControl('Correction','Style','popupmenu','String',{'Off','On'},'Enable','off');
     h.estimate_photobleaching_button = ol.AddButton('String','Estimate Photobleaching');
     ol.EndGroup();

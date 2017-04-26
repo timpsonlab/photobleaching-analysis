@@ -137,22 +137,51 @@ classdef FrapTool < handle
                 return;
             end
             
-            sel = strcmp({obj.data.roi.type},'Photobleaching Control'); 
-            pb_roi = obj.data.roi(sel);
+            source = obj.handles.photobleaching_source_popup.Value;
             
-            if isempty(pb_roi)
-                warndlg('Please set some ROIs to "Photobleaching Control" regions first','Could not estimate photobleaching');
-                return;
-            end
+            if source == 1 % PB regions
 
-            
-            recovery = 0;
-            for i=1:length(pb_roi)   
-                ri = pb_roi(i).untracked_recovery;
-                ri = ri / ri(1);
-                recovery = recovery + ri;
+                sel = strcmp({obj.data.roi.type},'Photobleaching Control');
+                pb_roi = obj.data.roi(sel);
+
+                if isempty(pb_roi)
+                    warndlg('Please set some ROIs to "Photobleaching Control" regions first','Could not estimate photobleaching');
+                    return;
+                end
+
+
+                recovery = 0;
+                for i=1:length(pb_roi)   
+                    ri = pb_roi(i).untracked_recovery;
+                    ri = ri / ri(1);
+                    recovery = recovery + ri;
+                end
+                recovery = recovery / length(pb_roi);
+                
+            else % distant junctions
+                
+                sel = obj.junction_artist.junctions.type == 3; % bleach junction
+                
+                if sum(sel) == 0
+                    warndlg('Please draw some distant junctions first','Could not estimate photobleaching');
+                    return;
+                end
+                
+                idx = 1:length(obj.junction_artist.junctions.type);
+                idx = idx(sel);
+
+                for i=1:length(idx)
+                    results = obj.GetTrackedJunctionData(idx(i));
+                    [kymograph,r] = GetCorrectedKymograph(results);
+                    kymograph = nanmean(kymograph,1);
+                    kymograph = kymograph / mean(kymograph(1:obj.data.n_prebleach_frames));                    
+                    recovery(:,i) = kymograph;
+                end
+                recovery = nanmean(recovery,2);
+                
             end
-            recovery = recovery / length(pb_roi);
+                
+                
 
             obj.pb_model = FitExpWithPlateau((0:length(recovery)-1)',double(recovery));
             % = feval(fitmodel,1:length(mean_after));
