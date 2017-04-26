@@ -14,6 +14,9 @@ function P = GetSplineImg(p, n, method)
         method = 'spline';
     end
 
+    % remove NaN
+    p = p(isfinite(p));
+    
     pt = interparc(n,real(p),imag(p),method);
     P = pt(:,1) + 1i  * pt(:,2);
 end
