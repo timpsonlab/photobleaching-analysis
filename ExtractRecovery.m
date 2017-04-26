@@ -28,9 +28,13 @@ function [recovery] = ExtractRecovery(images, roi, p)
                   (Y >= min(floor(ry))) & ...
                   (Y <= max(ceil(ry)));
 
-            mask = inpoly([X(sel),Y(sel)],[rx,ry]);
-            im = images{j}(sel);
-            v = sum(im(mask));
+            if sum(sel(:)) > 0 % check if ROI contains any valid pixels
+                mask = inpoly([X(sel),Y(sel)],[rx,ry]);
+                im = images{j}(sel);
+                v = sum(im(mask));
+            else
+                v = 0;
+            end
         else
             v = sum(images{j}(mask1));
         end
