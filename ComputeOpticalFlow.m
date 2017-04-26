@@ -68,19 +68,21 @@ function flow = ComputeOpticalFlow(ims, options)
     parfor q=1:poolsize
         data = pool_data{q};
         sz = size(data);
-        m = sz(3) - 1;
-        lflow = zeros([sz(1:2) m]);
+        if length(sz) >= 3 && sz(3) > 0 
+            m = sz(3) - 1;
+            lflow = zeros([sz(1:2) m]);
 
-        optical = opticalFlowHS();
-        estimateFlow(optical,double(data(:,:,1)));
-        for i=1:m
-            f = estimateFlow(optical, double(data(:,:,i+1)));
-            lflow(:,:,i) = f.Vx + 1i * f.Vy;
-            if use_smoothing
-                lflow(:,:,i) = conv2(lflow(:,:,i), kern, 'same');    
+            optical = opticalFlowHS();
+            estimateFlow(optical,double(data(:,:,1)));
+            for i=1:m
+                f = estimateFlow(optical, double(data(:,:,i+1)));
+                lflow(:,:,i) = f.Vx + 1i * f.Vy;
+                if use_smoothing
+                    lflow(:,:,i) = conv2(lflow(:,:,i), kern, 'same');    
+                end
             end
+            lflow_all{q} = lflow;
         end
-        lflow_all{q} = lflow;
     end
     
     % Put the data back together
