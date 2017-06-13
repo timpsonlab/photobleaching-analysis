@@ -33,8 +33,8 @@ classdef FrapTool < handle
                                                 
             obj.play_timer = timer('TimerFcn', @(~,~) obj.IncrementDisplay(), 'ExecutionMode','fixedRate','Period',0.025);
             
-            obj.lh(1) = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
-            obj.lh(2) = addlistener(obj.handles.tab_panel,'SelectionChanged',@(~,~) obj.UpdateKymograph);
+            obj.lh{1} = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
+            obj.lh{2} = addlistener(obj.handles.tab_panel,'SelectionChanged',@(~,~) obj.UpdateKymograph);
         end
         
         function delete(obj)
