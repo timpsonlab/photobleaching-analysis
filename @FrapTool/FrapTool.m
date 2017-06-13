@@ -33,7 +33,8 @@ classdef FrapTool < handle
                                                 
             obj.play_timer = timer('TimerFcn', @(~,~) obj.IncrementDisplay(), 'ExecutionMode','fixedRate','Period',0.025);
             
-            obj.lh = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
+            obj.lh(1) = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
+            obj.lh(2) = addlistener(obj.handles.tab_panel,'SelectionChanged',@(~,~) obj.UpdateKymograph);
         end
         
         function delete(obj)
@@ -421,10 +422,11 @@ classdef FrapTool < handle
            
             junction = obj.handles.kymograph_select.Value;
             
-            if junction > length(obj.junction_artist.junctions)
+            if junction > length(obj.junction_artist.junctions) || ...
+               obj.handles.tab_panel.Selection ~= 3 % only update when we can see the kymograph 
                 return;
             end
-            
+                        
             [kymograph,r] = GenerateKymograph(obj, junction);
             
             t = (0:size(kymograph,2)-1) * obj.data.dt;

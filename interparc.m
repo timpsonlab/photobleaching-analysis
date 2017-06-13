@@ -268,8 +268,11 @@ if method(1) == 'l'
   
   % which interval did each point fall in, in
   % terms of t?
+  try
   [junk,tbins] = histc(t,cumarc); %#ok
-  
+  catch e
+     disp(e); 
+  end
   % catch any problems at the ends
   tbins((tbins <= 0) | (t <= 0)) = 1;
   tbins((tbins >= n) | (t >= 1)) = n - 1;

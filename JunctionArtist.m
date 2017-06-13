@@ -138,7 +138,7 @@ classdef JunctionArtist < handle
                     % Remove junction
                     delete(obj.junctions(min_jcn));
                     obj.junctions(min_jcn) = [];
-                    
+                    drawnow();
                     notify(obj,'JunctionsChanged');
             end
         end
