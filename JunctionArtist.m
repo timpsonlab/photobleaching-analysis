@@ -89,6 +89,11 @@ classdef JunctionArtist < handle
                 obj.junctions = jcns{obj.dataset_idx};
             end
             
+            % Don't load tracked positions
+            for i=1:length(obj.junctions)
+                obj.junctions(i).tracked_positions = [];
+            end
+            
             for i=1:length(obj.junctions)
                 obj.junctions(i).CreatePlot(obj.handles.image_ax);
             end

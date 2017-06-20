@@ -338,26 +338,7 @@ classdef FrapTool < handle
 
             t = (0:size(recovery,1)-1)' * obj.data.dt;
         end
-        
-        function [all_recoveries, t] = GetAllRecoveries(obj,opt)
-            d = obj.data;
-            
-            if nargin < 2
-                opt = '';
-            end
-
-            all_recoveries = [];
-            
-            sel = strcmp({d.roi.type},'Bleached Region');
-            idx = 1:length(d.roi);
-            idx = idx(sel);
-            for i=idx
-                [recovery, t] = obj.GetRecovery(i,opt);
-                all_recoveries = [all_recoveries recovery]; %#ok
-            end
-                        
-        end
-
+               
         function UpdateKymographList(obj)           
             names = obj.junction_artist.GetJunctionNames();
             obj.handles.kymograph_select.String = names;

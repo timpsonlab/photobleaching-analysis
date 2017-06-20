@@ -48,6 +48,8 @@ function SwitchDataset(obj,i)
                                    obj.data.roi,...
                                    obj.reader.file,...
                                    obj.current_index);
+                               
+    obj.TrackJunctions();
 
     %obj.handles.tab_panel.Selection = 1;
 

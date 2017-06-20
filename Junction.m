@@ -2,11 +2,11 @@ classdef Junction < handle
 
     properties
         positions;
-        tracked_positions;
         type;
     end
     
     properties(Transient)
+        tracked_positions;
         handle;
     end
 
