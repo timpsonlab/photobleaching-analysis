@@ -564,12 +564,21 @@ classdef FrapTool < handle
             end
 
             p = jcn.tracked_positions;
-            
             options.line_width = 9;
-
             results = ExtractTrackedJunctions(obj.data.images, {p}, options);
                         
         end
+        
+        function results = GetUntrackedJunctionData(obj, j)
+            
+            jcn = obj.junction_artist.junctions(j);
+            
+            p = jcn.positions;
+            options.line_width = 9;
+            results = ExtractTrackedJunctions(obj.data.images, {p}, options);
+                        
+        end
+
         
         function [closest_roi, intersection_point] = FindClosestRoiToJunction(obj, j)
            

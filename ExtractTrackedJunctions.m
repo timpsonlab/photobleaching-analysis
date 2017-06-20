@@ -8,6 +8,12 @@ function results = ExtractTrackedJunctions(frames, tracked, options)
         options.line_width = 9;
     end
     
+    % If we only have one set of positions use them for all
+    for i=1:length(tracked)
+        if size(tracked{i},1) == 1
+            tracked{i} = repmat(tracked{i},[length(frames) 1]);
+        end
+    end
 
     lines = 1:length(tracked);
     np = 600;
@@ -16,7 +22,7 @@ function results = ExtractTrackedJunctions(frames, tracked, options)
     for j=1:length(frames)
 
         im = frames{j};
-
+        
         for k=lines
             [P,IDX] = GetThickLine(size(im),tracked{k}(j,:),np,ndil);        
             
