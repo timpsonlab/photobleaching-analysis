@@ -54,20 +54,7 @@ function ProcessAll(obj)
 
         %== Get junction recoveries
         
-        jrt = []; jru = []; jhs = {};
-        for j=1:length(obj.junction_artist.junctions)
-            results = obj.GetTrackedJunctionData(j);
-            kymograph = GetCorrectedKymograph(results);
-            recovery = nanmean(kymograph,1);
-            jrt(:,j) = recovery;
-            
-            results = obj.GetUntrackedJunctionData(j);
-            kymograph = GetCorrectedKymograph(results);
-            recovery = nanmean(kymograph,1);
-            jru(:,j) = recovery;
-            
-            jhs{j} = [name 'Junction_' num2str(j) '_' Junction.types{obj.junction_artist.junctions(j).type}];
-        end
+        [jrt, jru, jhs] = GetAllJunctionRecoveries(obj);
         
         junction_recovery_untracked = [junction_recovery_untracked jru];
         junction_recovery_tracked = [junction_recovery_tracked jrt];

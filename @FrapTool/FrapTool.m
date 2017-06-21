@@ -533,6 +533,7 @@ classdef FrapTool < handle
                 return;
             end
             
+            % Region recoveries
             sel = strcmp({obj.data.roi.type},'Bleached Region');
             recovery_untracked = GetRecovery(obj,sel);
             [recovery_tracked,t] = GetRecovery(obj,sel,'stable');
@@ -543,6 +544,32 @@ classdef FrapTool < handle
             csvwrite_with_headers([export_folder filesep obj.data.name '_recovery_tracked.csv'], [t recovery_tracked], headers);
             csvwrite_with_headers([export_folder filesep obj.data.name '_recovery_untracked.csv'], [t recovery_untracked], headers);
             
+            
+            % Junction recoveries
+            [junction_tracked, junction_untracked, headers] = GetAllJunctionRecoveries(obj);
+            headers = [{'Time (s)'} headers];
+            csvwrite_with_headers([export_folder filesep obj.data.name '_junction_recovery_tracked.csv'], [t junction_tracked],headers);
+            csvwrite_with_headers([export_folder filesep obj.data.name '_junction_recovery_untracked.csv'], [t junction_untracked], headers);
+            
+        end
+        
+        function [tracked_recoveries, untracked_recoveries, headers] = GetAllJunctionRecoveries(obj)
+            
+            for j=1:length(obj.junction_artist.junctions)
+                results = obj.GetTrackedJunctionData(j);
+                kymograph = GetCorrectedKymograph(results);
+                recovery = nanmean(kymograph,1);
+                tracked_recoveries(:,j) = recovery;
+
+                results = obj.GetUntrackedJunctionData(j);
+                kymograph = GetCorrectedKymograph(results);
+                recovery = nanmean(kymograph,1);
+                untracked_recoveries(:,j) = recovery;
+
+                name = [strtrim(obj.data.name) '_'];
+                headers{j} = [name 'Junction_' num2str(j) '_' Junction.types{obj.junction_artist.junctions(j).type}];
+            end
+
         end
         
         function [kymograph,r,results] = GenerateKymograph(obj, j)

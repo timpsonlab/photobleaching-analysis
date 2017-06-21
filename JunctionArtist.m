@@ -11,6 +11,11 @@ classdef JunctionArtist < handle
         dataset_idx;
     end
     
+    properties(Transient)
+        lh;
+        has_junctions = false;
+    end
+    
     events
         JunctionsChanged;
     end
@@ -55,12 +60,18 @@ classdef JunctionArtist < handle
 
             drawing_layout.Heights = [22 -1];
             
+            obj.lh = addlistener(parent,'SelectionChanged',@obj.TabChanged);
+            
             obj.handles = h;
             
         end
         
         function SetDataset(obj, im, roi, file, dataset_idx)
-                
+            
+            if obj.has_junctions
+                obj.SaveJunctions();
+            end
+            
             obj.file = file;
             obj.dataset_idx = dataset_idx;
             
@@ -98,6 +109,7 @@ classdef JunctionArtist < handle
                 obj.junctions(i).CreatePlot(obj.handles.image_ax);
             end
             
+            obj.has_junctions = true;
             notify(obj,'JunctionsChanged');
             
         end
@@ -178,6 +190,12 @@ classdef JunctionArtist < handle
                 if isfield(j,'junctions')
                     jcns = j.junctions;
                 end
+            end
+        end
+        
+        function TabChanged(obj,~,evt)
+            if evt.OldValue == 2 % was on tab panel
+                obj.SaveJunctions();
             end
         end
         
