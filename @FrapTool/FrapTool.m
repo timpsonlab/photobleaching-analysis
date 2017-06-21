@@ -33,8 +33,8 @@ classdef FrapTool < handle
                                                 
             obj.play_timer = timer('TimerFcn', @(~,~) obj.IncrementDisplay(), 'ExecutionMode','fixedRate','Period',0.025);
             
-            obj.lh{1} = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) obj.UpdateKymographList);
-            obj.lh{2} = addlistener(obj.handles.tab_panel,'SelectionChanged',@(~,~) obj.UpdateKymograph);
+            obj.lh{1} = addlistener(obj.junction_artist,'JunctionsChanged',@(~,~) EC(obj.UpdateKymographList));
+            obj.lh{2} = addlistener(obj.handles.tab_panel,'SelectionChanged',@(~,~) EC(obj.UpdateKymograph));
         end
         
         function delete(obj)
@@ -43,34 +43,34 @@ classdef FrapTool < handle
                
         function menus = SetupMenu(obj)
             file_menu = uimenu(obj.fh,'Label','File');
-            uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.LoadData,'Accelerator','O');
-            uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
-            uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
-            uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) obj.ProcessAll);
-            uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
-            uimenu(file_menu,'Label','Export Kymographs for all Datasets...','Callback',@(~,~) obj.ExportAllKymographs);
-            uimenu(file_menu,'Label','Batch Export...','Callback',@(~,~) obj.BatchExport,'Separator','on');
-            uimenu(file_menu,'Label','Export for Figure...','Callback',@(~,~) obj.ExportForFigure,'Separator','on');
+            uimenu(file_menu,'Label','Open...','Callback',@(~,~) EC(@obj.LoadData),'Accelerator','O');
+            uimenu(file_menu,'Label','Refresh','Callback',@(~,~) EC(@obj.SetCurrent),'Accelerator','R');
+            uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) EC(@obj.ExportRecovery),'Separator','on');
+            uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) EC(@obj.ProcessAll));
+            uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) EC(@obj.ExportKymographs),'Separator','on');
+            uimenu(file_menu,'Label','Export Kymographs for all Datasets...','Callback',@(~,~) EC(@obj.ExportAllKymographs));
+            uimenu(file_menu,'Label','Batch Export...','Callback',@(~,~) EC(@obj.BatchExport),'Separator','on');
+            uimenu(file_menu,'Label','Export for Figure...','Callback',@(~,~) EC(@obj.ExportForFigure),'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
-            uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) obj.TrackJunctions,'Accelerator','T');
+            uimenu(tracking_menu,'Label','Track Junctions...','Callback',@(~,~) EC(@obj.TrackJunctions),'Accelerator','T');
             
             menus = [file_menu tracking_menu];
         end
         
         function SetupCallbacks(obj)
             h = obj.handles;
-            h.files_list.Callback = @(list,~) obj.SwitchDataset(list.Value);
-            h.reload_button.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
-            h.estimate_photobleaching_button.Callback = @(~,~) obj.EstimatePhotobleaching();
-            h.photobleaching_popup.Callback = @(~,~) obj.UpdateRecoveryCurves();
-            h.recovery_popup.Callback = @(~,~) obj.UpdateRecoveryCurves();
-            h.channel_popup.Callback = @(~,~) obj.SwitchDataset(h.files_list.Value);
-            h.delete_roi_button.Callback = @(~,~) obj.DeleteRoi();
-            h.roi_type_popup.Callback = @obj.ChangeRoiType;
-            h.play_button.Callback = @(src,evt) obj.PlayButtonPressed(src,evt);
+            h.files_list.Callback = @(list,~) EC(@obj.SwitchDataset,list.Value);
+            h.reload_button.Callback = @(~,~) EC(@obj.SwitchDataset,h.files_list.Value);
+            h.estimate_photobleaching_button.Callback = @(~,~) EC(@obj.EstimatePhotobleaching);
+            h.photobleaching_popup.Callback = @(~,~) EC(@obj.UpdateRecoveryCurves);
+            h.recovery_popup.Callback = @(~,~) EC(@obj.UpdateRecoveryCurves);
+            h.channel_popup.Callback = @(~,~) EC(@obj.SwitchDataset,h.files_list.Value);
+            h.delete_roi_button.Callback = @(~,~) EC(@obj.DeleteRoi);
+            h.roi_type_popup.Callback = @(src,evt) EC(@obj.ChangeRoiType,src,evt);
+            h.play_button.Callback = @(src,evt) EC(@obj.PlayButtonPressed,src,evt);
             obj.roi_handler = RoiHandler(h);
-            addlistener(obj.roi_handler,'roi_updated',@(~,~) obj.AddRoi);
+            addlistener(obj.roi_handler,'roi_updated',@(~,~) EC(@obj.AddRoi));
         end
         
         function PlayButtonPressed(obj,src,evt)

@@ -19,12 +19,12 @@ classdef LaFrapTool < handle
         function SetupCallbacks(obj)
            
             h = obj.handles;
-            h.add_button.Callback = @(~,~) obj.AddData();
-            h.remove_button.Callback = @(~,~) obj.RemoveData();
-            h.files_list.Callback = @(~,~) obj.UpdateDisplay();
-            h.include_outliers_popup.Callback = @(~,~) obj.UpdateDisplay();
-            h.spatial_display_popup.Callback = @(~,~) obj.UpdateDisplay();
-            h.fit_button.Callback = @(~,~) obj.FitKymograph();
+            h.add_button.Callback = @(~,~) EC(@obj.AddData);
+            h.remove_button.Callback = @(~,~) EC(@obj.RemoveData);
+            h.files_list.Callback = @(~,~) EC(@obj.UpdateDisplay);
+            h.include_outliers_popup.Callback = @(~,~) EC(@obj.UpdateDisplay);
+            h.spatial_display_popup.Callback = @(~,~) EC(@obj.UpdateDisplay);
+            h.fit_button.Callback = @(~,~) EC(@obj.FitKymograph);
 
             AddCallbackWithValidator(h.distance_edit, @obj.UpdateDisplay);
             AddCallbackWithValidator(h.max_time_edit, @obj.UpdateDisplay);
@@ -32,11 +32,11 @@ classdef LaFrapTool < handle
         
         function menus = SetupMenu(obj)
             file_menu = uimenu(obj.fh,'Label','File');
-            uimenu(file_menu,'Label','Open...','Callback',@(~,~) obj.AddData,'Accelerator','O');
-            uimenu(file_menu,'Label','Refresh','Callback',@(~,~) obj.SetCurrent,'Accelerator','R');
-            uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) obj.ExportRecovery,'Separator','on');
-            uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) obj.ProcessAll);
-            uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) obj.ExportKymographs,'Separator','on');
+            uimenu(file_menu,'Label','Open...','Callback',@(~,~) EC(@obj.AddData),'Accelerator','O');
+            uimenu(file_menu,'Label','Refresh','Callback',@(~,~) EC(@obj.SetCurrent),'Accelerator','R');
+            uimenu(file_menu,'Label','Export Recovery Curves...','Callback',@(~,~) EC(@obj.ExportRecovery),'Separator','on');
+            uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) EC(@obj.ProcessAll));
+            uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) EC(@obj.ExportKymographs),'Separator','on');
             
             menus = [file_menu];
         end
