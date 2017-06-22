@@ -46,19 +46,23 @@ function ProcessAll(obj)
         hs = {obj.data.roi(sel).label};
         hs = strcat(obj.data.name, hs);
         
-        recovery_untracked = [recovery_untracked ru];
-        recovery_tracked = [recovery_tracked rt];
-        headers = [headers hs];
-        
-        assert(length(ti) == length(t) && all(ti==t),'All files must have the same time points!');
+        if (length(ti) == length(t) && all(ti==t))        
+            recovery_untracked = [recovery_untracked ru];
+            recovery_tracked = [recovery_tracked rt];
+            headers = [headers hs];
+            
+            [jrt, jru, jhs] = GetAllJunctionRecoveries(obj);
 
+            junction_recovery_untracked = [junction_recovery_untracked jru];
+            junction_recovery_tracked = [junction_recovery_tracked jrt];
+            junction_headers = [junction_headers jhs];
+            
+        else
+            warning(['Dataset ' obj.data.name 'had inconsistent timepoints, excluding results']);
+        end
+        
         %== Get junction recoveries
         
-        [jrt, jru, jhs] = GetAllJunctionRecoveries(obj);
-        
-        junction_recovery_untracked = [junction_recovery_untracked jru];
-        junction_recovery_tracked = [junction_recovery_tracked jrt];
-        junction_headers = [junction_headers jhs];
         
         waitbar(i/length(obj.reader.groups),h);
         
