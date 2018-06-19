@@ -39,8 +39,9 @@ function handles = FrapInterface()
                 
     handles.panel{1} = FrapTool(handles.tab_panel,handles.fh);
     handles.panel{2} = LaFrapTool(handles.tab_panel, handles.fh);
+    handles.panel{3} = IcsTool(handles.tab_panel, handles.fh);
     
-    handles.tab_panel.TabTitles = {'Data Processing', 'Spatial FRAP Analysis'};    
+    handles.tab_panel.TabTitles = {'Data Processing', 'Spatial FRAP Analysis', 'ICS'};    
     handles.tab_listener = addlistener(handles.tab_panel,'SelectionChanged',@TabChangeCallback);
     handles.menus = handles.panel{1}.SetupMenu();
     
