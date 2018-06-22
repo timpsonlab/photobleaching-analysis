@@ -12,7 +12,9 @@ function ExportIcsResults(obj)
         [tau(i),mobile(i),C(i)] = IcsAnalysis(k.data,k.temporal_units_per_pixel,t_max);
     end
     
-    headers = {'tau','IF','C'};    
-    csvwrite_with_headers([path filesep export_file], [tau' 1-mobile', C'],headers);
+    names = {obj.kymographs.name};
+    
+    t = table(tau', 1-mobile', C','VariableNames',{'tau','IF','C'},'RowNames',names);
+    writetable(t,[path filesep export_file],'WriteRowNames',true);
 
 end
