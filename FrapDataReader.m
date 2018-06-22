@@ -23,7 +23,19 @@ classdef FrapDataReader
         
         % Get names of images
         n_image = m.getImageCount();
-        name = arrayfun(@(x) char(m.getImageName(x-1)), 1:n_image, 'UniformOutput', false);
+        image_id = 1:n_image;
+        name = arrayfun(@(x) char(m.getImageName(x-1)), image_id, 'UniformOutput', false);
+        
+        % Remove path from series names, if it exists (e.g. ICS data)
+        path = [fileparts(file) filesep];
+        path = strrep(path,'\','/');
+        name = strrep(name,path,''); 
+        
+        % Give series names if blank
+        [~,filename,~] = fileparts(file); 
+        unnamed = cellfun(@isempty, name);
+        name(unnamed) = arrayfun(@(id) [filename ' ' num2str(id,'%03d')], image_id(unnamed), 'UniformOutput', false);
+        
 
         % Match FRAP group and series 
         tokens = regexp(name,'([^/]+/)*(.+)','tokens');
@@ -37,6 +49,9 @@ classdef FrapDataReader
 
         group = strrep(group,'/',' ');
         
+        single_series = cellfun(@isempty,group);
+        group(single_series) = series(single_series);
+        
         % Get unique groups
         [obj.groups,~,group_id] = unique(group);
 
@@ -44,11 +59,10 @@ classdef FrapDataReader
         has_two_series = arrayfun(@(x) sum(group_id==x)==2, 1:length(obj.groups));
 
         first_series = matched_idx(arrayfun(@(x) find(group_id==x,1), 1:length(obj.groups)));
-        has_roi = arrayfun(@(x) m.getImageROIRefCount(x), first_series);
+        has_roi = arrayfun(@(x) m.getImageROIRefCount(x-1), first_series);
         
-        valid = has_two_series & has_roi;
-        
-        obj.groups = obj.groups(valid);
+        %valid = has_two_series & has_roi;
+        %obj.groups = obj.groups(valid);
         
         obj.group = cell([n_image 1]);
         obj.group(matched_idx) = group;
@@ -78,7 +92,7 @@ classdef FrapDataReader
         if first_only
             use = 1;
         else
-            use = 1:2;
+            use = 1:length(matching_id);
         end
         
         im = cell(size(use));
@@ -109,6 +123,12 @@ classdef FrapDataReader
             
         end
         
+        if length(use) > 1
+            n_prebleach_frames = length(im{1});
+        else
+            n_prebleach_frames = 1; % TODO
+        end
+        
         s = matching_id(1);
         
         px_size = obj.meta.getPixelsPhysicalSizeX(s);        
@@ -120,6 +140,16 @@ classdef FrapDataReader
             else
                 dt = 1;
             end
+        else
+            dt = double(dt.value);
+        end
+        
+        if isempty(px_size)
+            length_unit = 'um';
+            px_size = 1;
+        else
+            length_unit = char(px_size.unit.getSymbol);
+            px_size = double(px_size.value);
         end
         
         frap.images = {};
@@ -127,11 +157,11 @@ classdef FrapDataReader
             frap.images = [frap.images; im{i}];
         end
         
-        frap.units_per_px = double(px_size.value);
-        frap.length_unit = char(px_size.unit.getSymbol);
+        frap.units_per_px = px_size;
+        frap.length_unit = length_unit;
         frap.dt = dt;
         frap.name = obj.group{s+1};
-        frap.n_prebleach_frames = length(im{1});
+        frap.n_prebleach_frames = n_prebleach_frames;
         
         frap.roi = obj.GetROI(s);
         
