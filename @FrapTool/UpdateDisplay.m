@@ -21,11 +21,13 @@ function UpdateDisplay(obj)
             0 1 0
             0 0 1];
 
+    spacing = 0.5;
+        
     jcns = obj.junction_artist.junctions;
     for i=1:length(jcns)
         tp = jcns(i).tracked_positions;
         if ~isempty(tp)
-            [~,idx] = GetThickLine(size(cur_image),tp(cur,:),600,ndil); 
+            [~,idx] = GetThickLine(size(cur_image),tp(cur,:),spacing,ndil); 
             mask_im(idx) = jcns(i).type;
         end
     end
