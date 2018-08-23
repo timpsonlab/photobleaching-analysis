@@ -463,21 +463,24 @@ classdef FrapTool < handle
                 [kymograph,r] = obj.GenerateKymograph(i);
                 [closest_roi,intersection_point] = obj.FindClosestRoiToJunction(i);
                 
-                roi = obj.data.roi(closest_roi).position * obj.data.units_per_px;
-                roi_area = polyarea(real(roi),imag(roi));
-                
                 extra.type = jcns(i).type;
                 extra.spatial_unit = obj.data.length_unit;
                 extra.spatial_units_per_pixel = (r(2)-r(1)) * obj.data.units_per_px;
                 extra.temporal_unit = 's';
                 extra.temporal_units_per_pixel = obj.data.dt;
-                extra.roi_intersection = intersection_point;
-                extra.roi_area = roi_area;
-                extra.roi_x = real(roi);
-                extra.roi_y = imag(roi);
                 extra.n_prebleach_frames = obj.data.n_prebleach_frames;
+
+                if ~isempty(closest_roi)
+                    roi = obj.data.roi(closest_roi).position * obj.data.units_per_px;
+                    roi_area = polyarea(real(roi),imag(roi));
+                    
+                    extra.roi_intersection = intersection_point;
+                    extra.roi_area = roi_area;
+                    extra.roi_x = real(roi);
+                    extra.roi_y = imag(roi);
+                end
+
                 extra_data = savejson('Kymograph',extra);
-                
                                                 
                 tag.ImageLength = size(kymograph,1);
                 tag.ImageWidth = size(kymograph,2);  
@@ -627,6 +630,12 @@ classdef FrapTool < handle
             sel = strcmp({obj.data.roi.type},'Bleached Region');
             idx = 1:length(obj.data.roi);
             sel = idx(sel);
+            
+            if isempty(sel)
+                closest_roi = [];
+                intersection_point = [];
+                return
+            end
             
             for i=1:length(sel)
                 roi_c(i) = mean(obj.data.roi(sel(i)).tracked_position(frame_idx));
