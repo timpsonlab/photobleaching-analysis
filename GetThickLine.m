@@ -1,7 +1,14 @@
-function [P,IDX] = GetThickLine(sz,line,np,ndil)
-    P = GetSplineImg(line,np,'linear');        
+function [P,IDX] = GetThickLine(sz,line,spacing,ndil)
 
-    g = 1i * diff(P); %-diff(imag(P)) + 1i * diff(imag(P));
+    % Determine how many points we need to get given spacing
+    P = GetSplineImg(line,500,'linear');        
+    distance = sum(abs(diff(P)));
+    np = round(distance / spacing);
+    
+    P = GetSplineImg(line,np,'linear');
+    
+    
+    g = 1i * diff(P);
     g = g ./ abs(g);
     g = [g(1); g];
 
