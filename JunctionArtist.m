@@ -77,6 +77,8 @@ classdef JunctionArtist < handle
             
             ax = obj.handles.image_ax;
             cla(ax);
+            im = im / prctile(im(:),99);
+            im(im>1) = 1;
             obj.handles.image = imagesc(im,'Parent',ax);
             colormap(ax,'gray');
             set(ax,'XTick',[],'YTick',[]);
