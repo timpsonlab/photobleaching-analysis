@@ -58,30 +58,12 @@ classdef AbstractKymographProcessor < handle
             
             for i=1:length(file)
                 filename = [root file{i}];
-                info = imfinfo(filename);
-                
-                if info.ImageDescription(1) ~= '{'
-                    found_invalid_file = true;
+                kymograph = LoadKymograph(filename);
+
+                if isempty(kymograph)
+                    found_invalid = true;
                     continue;
                 end
-                
-                kymograph = loadjson(info.ImageDescription);
-                
-                if ~isfield(kymograph,'Kymograph')
-                    found_invalid_file = true;
-                    continue;
-                end
-                                
-                kymograph = kymograph.Kymograph;
-                
-                %if ~isfield(kymograph,'type') || kymograph.type ~= 1 % bleach
-                %    found_invalid_file = true;
-                %    continue;
-                %end
-                
-                kymograph.data = imread(filename,'Info',info);
-                kymograph.file = filename;
-                kymograph.name = file{i};
                 
                 if isempty(obj.kymographs)
                     obj.kymographs = kymograph;

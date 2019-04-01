@@ -1,4 +1,4 @@
-function [tau, mobile, C, fitresult, gof] = FitTemporalCorrelation(t, rt1)
+function [tau, g0, g_inf, fitresult, gof] = FitTemporalCorrelation(t, rt1)
 %CREATEFIT(T,RT1)
 %  Create a fit.
 %
@@ -21,16 +21,16 @@ function [tau, mobile, C, fitresult, gof] = FitTemporalCorrelation(t, rt1)
 ft = fittype( 'A/(1+(x/b1))+C', 'independent', 'x', 'dependent', 'y' );
 opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
 opts.Display = 'Off';
-opts.StartPoint = [0.5 0 50];
-opts.Lower = [0 -Inf 0];
+opts.StartPoint = [max(yData) 0.01 400];
+opts.Lower = [0 0 0];
 
 
 % Fit model to data.
 [fitresult, gof] = fit( xData, yData, ft, opts );
 
 tau = fitresult.b1;
-mobile = fitresult.A;
-C = fitresult.C;
+g0 = fitresult.A;
+g_inf = fitresult.C;
 
 %{
 % Plot fit with data.
