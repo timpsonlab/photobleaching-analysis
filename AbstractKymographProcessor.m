@@ -49,6 +49,8 @@ classdef AbstractKymographProcessor < handle
             if ~iscell(file) && ~ischar(file)
                 return
             end
+            
+            SetLastFolder(obj.fh,root);
 
             if ~iscell(file)
                 file = {file};
@@ -61,7 +63,7 @@ classdef AbstractKymographProcessor < handle
                 kymograph = LoadKymograph(filename);
 
                 if isempty(kymograph)
-                    found_invalid = true;
+                    found_invalid_file = true;
                     continue;
                 end
                 

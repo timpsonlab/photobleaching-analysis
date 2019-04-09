@@ -1,10 +1,10 @@
 function handles = FrapInterface()
 
     if ~isdeployed
-        addpath('layout','jsonlab','matlab-ui-common');
+        addpath('layout','jsonlab','matlab-ui-common','frame-aligner');
     end
     
-    GetBioformats();
+    get_bioformats();
 
     screen_pos = get(0,'ScreenSize');
     pos = [100 100 screen_pos(3:4) - 200];

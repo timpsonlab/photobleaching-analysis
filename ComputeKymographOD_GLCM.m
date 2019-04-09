@@ -1,29 +1,29 @@
-function contrast = ComputeKymographOD_GLCM(r, im, lim, max_distance, n_points)
+function [contrast,rout] = ComputeKymographOD_GLCM(r, im, options)
 %
 % Compute interpolated OD GLCM on a kypmograph im 
 % r: points along distance axis of kymograph
 % max_distance: maximum distance to compute OD GLCM
 % n_points: number of points to interpolate OD GLCM
 
-    if nargin < 4
-        max_distance = 2.5;
+    if ~isfield(options,'max_distance')
+        options.max_distance = 2.5;
     end
-    if nargin < 5
-        n_points = 50;
+    if ~isfield(options,'n_points')
+        options.n_points = 100;
     end
 
-    if nargin < 3
-        lim = 2000;
+    if ~isfield(options,'glcm_lim')
+        options.glcm_lim = 2000;
     end
 
     dist = length(r);
-    step = 10;
+    step = 1;
         
     r = r(1:step:dist);
-    rout = linspace(0,max_distance,n_points);
+    rout = linspace(0,options.max_distance,options.n_points);
         
     im(~isfinite(im)) = 0;
-    glcm = graycomatrix(im, 'Offset', [(1:step:dist)' zeros(length(r),1)], 'GrayLimits', [0 lim]);
+    glcm = graycomatrix(im, 'Offset', [(1:step:dist)' zeros(length(r),1)], 'GrayLimits', [0 options.glcm_lim]);
     props = graycoprops(glcm, 'Contrast');
 
     contrast = props.Contrast;

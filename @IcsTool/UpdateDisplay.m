@@ -7,13 +7,13 @@ function UpdateDisplay(obj)
     end
     
     cur = cur(1);
-    t_max = str2double(obj.handles.max_time_edit.String);
+    kymograph = obj.GetKymograph(cur);
     
-    kymograph = obj.kymographs(cur);
-    ki = kymograph.data;
+    ki = kymograph.kymograph;
     ri = (0:size(ki,1)-1) * kymograph.spatial_units_per_pixel;
     ti = (0:size(ki,2)-1) * kymograph.temporal_units_per_pixel;
-
+    
+    
     ax = obj.handles.image_ax;
     imagesc(ti,ri,ki,'Parent',ax);
     ax.XLabel.String = 'Time (s)';
@@ -23,8 +23,16 @@ function UpdateDisplay(obj)
     ax.XLim = [min(ti) max(ti)];
     TightAxes(ax);
     
+    options = obj.GetOptions();
     
-    ax = obj.handles.fit_ax;
-    IcsAnalysis(ki,kymograph.temporal_units_per_pixel,t_max, ax);
+    IcsAnalysis(ki, kymograph.temporal_units_per_pixel, options, obj.handles.ics_ax);
+    
+    ax = obj.handles.glcm_ax;
+    [contrast,r_contrast] = ComputeKymographOD_GLCM(ri, ki, options);
+    plot(ax,r_contrast,contrast,'x');
+    ylim(ax,[0 1])
+    set(ax,'TickDir','out','Box','off')
+    xlabel(ax,'Distance (\mum)');
+    ylabel(ax,'Contrast')
     
 end

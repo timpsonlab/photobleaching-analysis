@@ -16,17 +16,29 @@ function SetupLayout(obj, parent, fig)
 
     
     h.image_ax = axes('Parent',p(1));
-    h.profile_ax = axes('Parent',p(2));
-    h.fit_ax = axes('Parent',p(3));
+    h.glcm_ax = axes('Parent',p(2));
+    h.ics_ax = axes('Parent',p(3));
     
-    TightAxes([h.image_ax h.profile_ax h.fit_ax]);
+    TightAxes([h.image_ax h.glcm_ax h.ics_ax]);
         
     %==== Options sidebar ====
     options_panel = uipanel(layout,'Title','Options');
     ol = options_layout(options_panel);
 
-    ol.StartGroup('Limits');
-    h.max_time_edit = ol.AddControl('Max Time (s)','Style','edit','String',{'500'});
+    ol.StartGroup('Time steps');
+    h.time_interval_edit = ol.AddControl('Time step (s)','Style','edit','String',{'-'});
+    h.temporal_downsampling_edit = ol.AddControl('Downsampling','Style','edit','String',{'1'});
+    ol.EndGroup();
+    
+    ol.StartGroup('ICS');
+    h.max_time_edit = ol.AddControl('Max time (s)','Style','edit','String',{'500'});
+    h.fit_diffusion_popupmenu = ol.AddControl('Fit Diffusion','Style','popupmenu','String',{'Yes','No'});
+    h.fit_flow_popupmenu = ol.AddControl('Fit Flow','Style','popupmenu','String',{'Yes','No'});
+    ol.EndGroup();
+
+    ol.StartGroup('OD-GLCM');
+    h.max_distance_edit = ol.AddControl('Max distance (um)', 'Style', 'edit', 'String', {'2.5'});
+    h.glcm_lim_edit = ol.AddControl('Intensity (DN)', 'Style', 'edit', 'String', {'2000'});
     ol.EndGroup();
     
     ol.Finish();
