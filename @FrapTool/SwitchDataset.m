@@ -15,6 +15,7 @@ function SwitchDataset(obj,i)
     options.load_first_only = obj.handles.load_option_popup.Value == 2;
     options.use_flow_compensation = obj.handles.flow_compensation_popup.Value == 2;
     options.use_drift_compensation = obj.handles.drift_compensation_popup.Value == 2;
+    options.use_power_normalisation = obj.handles.power_normalisation_popup.Value == 2;
     options.image_smoothing_kernel_width = getNumFromPopup(obj.handles.image_smoothing_popup);
     options.flow_smoothing_kernel_width = getNumFromPopup(obj.handles.flow_smoothing_popup);
     options.frame_binning = getNumFromPopup(obj.handles.frame_binning_popup);
@@ -40,6 +41,17 @@ function SwitchDataset(obj,i)
         obj.data.flow = padarray(obj.data.flow,[0 0 obj.data.n_prebleach_frames],0,'pre');
     else
         obj.data.flow = zeros([size(obj.data.images{1}) length(obj.data.images)],'single');
+    end
+    
+    if options.use_power_normalisation
+       
+        avg_intensity = cellfun(@(im) nanmean(im(:)), obj.data.images);
+        norm_intensity = mean(avg_intensity);
+        intensity_corr = norm_intensity ./ avg_intensity;
+        
+        obj.data.images = cellfun(@(im,corr) im * corr, ...
+            obj.data.images, num2cell(intensity_corr), 'UniformOutput', false);
+        
     end
     
     MessageHandler.send('GarvanFrap','Finished Loading');

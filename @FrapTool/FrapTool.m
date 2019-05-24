@@ -99,6 +99,7 @@ classdef FrapTool < handle
                 [file, root] = uigetfile('*.*','Choose File...',GetLastFolder(obj.fh));
             else
                 [root, file, ext] = fileparts(root);
+                root = [root filesep];
                 file = [file ext];
             end
             if file == 0
@@ -306,7 +307,7 @@ classdef FrapTool < handle
             if nargin < 2 || isempty(idx)
                 idx = 1:length(d.roi);
             end
-            
+               
             if nargin > 2 && strcmp(opt,'stable')
                 % Get centre of roi and stabalise using optical flow
                 recovery = [d.roi(idx).tracked_recovery];
@@ -330,12 +331,16 @@ classdef FrapTool < handle
         
         function [corrected,t] = CorrectRecovery(obj,recovery)
                      
-            pb_curve = obj.GetPhotobleachingCorrection();
-            corrected = recovery ./ pb_curve;
-            
-            initial = mean(corrected(1:obj.data.n_prebleach_frames,:));
-            corrected = corrected ./ initial;
+            if isempty(recovery)
+                corrected = [];
+            else
+                pb_curve = obj.GetPhotobleachingCorrection();
+                corrected = recovery ./ pb_curve;
 
+                initial = mean(corrected(1:obj.data.n_prebleach_frames,:));
+                corrected = corrected ./ initial;
+            end
+            
             t = (0:size(recovery,1)-1)' * obj.data.dt;
         end
                
@@ -422,9 +427,9 @@ classdef FrapTool < handle
             xlabel(ax_h,'Time (s)');
             ylabel(ax_h,distance_label);
             
-            lim = 500;
+            options.glcm_lim = 500;
             
-            contrast = ComputeKymographOD_GLCM(r,kymograph,lim);
+            contrast = ComputeKymographOD_GLCM(r,kymograph,options);
             
             h_ax = obj.handles.od_glcm_ax;
             plot(obj.handles.od_glcm_ax,contrast,'-o');
@@ -460,6 +465,8 @@ classdef FrapTool < handle
             
             jcns = obj.junction_artist.junctions;
             for i=1:length(jcns)
+                if isempty(jcns(i).positions), continue, end
+                
                 [kymograph,r] = obj.GenerateKymograph(i);
                 [closest_roi,intersection_point] = obj.FindClosestRoiToJunction(i);
                 

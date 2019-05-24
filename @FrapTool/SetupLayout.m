@@ -95,6 +95,11 @@ function SetupLayout(obj, parent, fig)
     h.estimate_photobleaching_button = ol.AddButton('String','Estimate Photobleaching');
     ol.EndGroup();
 
+    ol.StartGroup('Laser Power Compensation');
+    h.power_normalisation_popup = ol.AddControl('Compensation','Style','popupmenu','String',{'Off','On'});
+    ol.EndGroup();
+
+    
     ol.StartGroup('Junctions');
     h.junction_width = ol.AddControl('Width (px)','Style','edit','String','9');
     ol.EndGroup();

@@ -48,6 +48,7 @@ classdef FrapDataReader
         series = cellfun(@(x) x{1}{2}, tokens(matched), 'UniformOutput', false);
 
         group = strrep(group,'/',' ');
+        group = strtrim(group);
         
         single_series = cellfun(@isempty,group);
         group(single_series) = series(single_series);

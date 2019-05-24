@@ -5,6 +5,10 @@ function [contrast,rout] = ComputeKymographOD_GLCM(r, im, options)
 % max_distance: maximum distance to compute OD GLCM
 % n_points: number of points to interpolate OD GLCM
 
+    if nargin < 3
+        options = struct();
+    end
+
     if ~isfield(options,'max_distance')
         options.max_distance = 2.5;
     end
