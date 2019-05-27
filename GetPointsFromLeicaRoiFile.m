@@ -13,7 +13,11 @@ function [x,y] = GetPointsFromLeicaRoiFile(filename, im_width_px, im_width_um)
 
     transform = roi.Children(4);
     translation = transform.Children(4).Attributes;
+    scale = transform.Children(2).Attributes;
 
+    yscale = str2double(scale(2).Value);
+    xscale = str2double(scale(1).Value);
+    
     y0 = str2double(translation(2).Value);
     x0 = str2double(translation(1).Value);
 
@@ -25,8 +29,8 @@ function [x,y] = GetPointsFromLeicaRoiFile(filename, im_width_px, im_width_um)
        y(end+1) = str2double(points(i).Attributes(2).Value);
     end
 
-    x = x - x0;
-    y = y - y0;
+    x = x * xscale - x0;
+    y = y * yscale - y0;
 
     x = - x / imsize * dim + dim/2;
     y = - y / imsize * dim + dim/2;
