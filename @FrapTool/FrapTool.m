@@ -49,7 +49,7 @@ classdef FrapTool < handle
             uimenu(file_menu,'Label','Export Recovery Curves for all Datasets...','Callback',@(~,~) EC(@obj.ProcessAll));
             uimenu(file_menu,'Label','Export Kymographs...','Callback',@(~,~) EC(@obj.ExportKymographs),'Separator','on');
             uimenu(file_menu,'Label','Export Kymographs for all Datasets...','Callback',@(~,~) EC(@obj.ExportAllKymographs));
-            uimenu(file_menu,'Label','Batch Export...','Callback',@(~,~) EC(@obj.BatchExport),'Separator','on');
+            uimenu(file_menu,'Label','Batch Export Kymographs...','Callback',@(~,~) EC(@obj.BatchExportKymographs),'Separator','on');
             uimenu(file_menu,'Label','Export for Figure...','Callback',@(~,~) EC(@obj.ExportForFigure),'Separator','on');
 
             tracking_menu = uimenu(obj.fh,'Label','Tracking');
